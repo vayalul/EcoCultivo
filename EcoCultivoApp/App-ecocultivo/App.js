@@ -1,6 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View} from 'react-native';
-import 'react-native-gesture-handler';
 
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
@@ -14,8 +13,22 @@ export default function App() {
 function MyStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Login" component={Login} />
-      <Stack.Screen name="Home" component={Home} />
+      <Stack.Screen name="Login" component={Login} 
+      options={{
+        title: 'Login',
+        headerTintColor: 'white',
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: '#128C7E'},
+      }} />
+      <Stack.Screen name="Home" component={Home} 
+      options={{
+        title: 'Home',
+        headerTintColor: 'white',
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: '#128C7E'},
+      }} />
     </Stack.Navigator>
   );
 }
