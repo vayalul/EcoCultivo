@@ -1,7 +1,26 @@
-import React from 'react';
-import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity } from 'react-native'; 
+import React, { useState } from 'react';
+import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity, Alert } from 'react-native'; 
 
-export default function Login() {
+import appFirebase from '../credenciales'
+import {getAuth, signInWithEmailAndPassword} from 'firebase/auth'
+const auth = getAuth(appFirebase)
+
+export default function Login(props) {
+
+    //creamos la variable de estado
+    const [correo, setCorreo] = useState()
+    const  [contraseña, setContraseña] = useState()
+
+    const logueo = async()=>{
+        try {
+            await signInWithEmailAndPassword(auth,correo, contraseña)
+            Alert.alert('Iniciando Sesion', 'Accediendo...')
+            props.navigation.navigate('Home')
+    }   catch(error) {
+        console.log(error);
+    }
+}
+
     return (
       <ImageBackground 
         source={require('../assets/Fondo.png')}
@@ -14,15 +33,17 @@ export default function Login() {
 
             <View style={styles.tarjeta}>
                 <View style={styles.cajaTexto}>
-                    <TextInput placeholder="Usuario" style={{paddingHorizontal: 15}} />
+                    <TextInput placeholder="Usuario" style={{paddingHorizontal: 15}} 
+                    onChangeText={(text)=>setCorreo(text)}/>
                 </View>
 
                 <View style={styles.cajaTexto}>
-                    <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} />
+                    <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
+                    onChangeText={(text)=>setContraseña(text)} secureTextEntry={true}/>
                 </View>
 
                 <View style={styles.padreBoton}>
-                    <TouchableOpacity style={styles.cajaBoton}>
+                    <TouchableOpacity style={styles.cajaBoton} onPress={logueo}>
                         <Text style={styles.TextoBoton}>Iniciar Sesión</Text>
                     </TouchableOpacity>
                 </View>
