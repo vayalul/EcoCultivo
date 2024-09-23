@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import Login from './screens/Login';
 import Home from './screens/Home';
+import Registro from './screens/Registro';
 
 export default function App() {
 
@@ -29,6 +30,7 @@ function MyStack() {
         headerStyle: {
           backgroundColor: '#128C7E'},
       }} />
+      <Stack.Screen name="Registro" component={Registro} />
     </Stack.Navigator>
   );
 }
