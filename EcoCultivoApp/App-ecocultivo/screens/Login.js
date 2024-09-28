@@ -5,21 +5,31 @@ import appFirebase from '../credenciales'
 import {getAuth, signInWithEmailAndPassword} from 'firebase/auth'
 const auth = getAuth(appFirebase)
 
-export default function Login(props) {
+export default function Login({ navigation }) {
 
     //creamos la variable de estado
-    const [correo, setCorreo] = useState()
-    const  [contraseña, setContraseña] = useState()
+    const [email, setEmail] = useState()
+    const [password, setPassword] = useState()
 
-    const logueo = async()=>{
+    const logueo = async() => {
         try {
-            await signInWithEmailAndPassword(auth,correo, contraseña)
-            Alert.alert('Iniciando Sesion', 'Accediendo...')
-            props.navigation.navigate('Home')
-    }   catch(error) {
-        console.log(error);
+            // Intentar iniciar sesión
+            await signInWithEmailAndPassword(auth, email, password)
+            
+            // Solo muestra la alerta y navega si el login fue exitoso
+            Alert.alert('Iniciando Sesión', 'Accediendo...')
+            navigation.navigate('Home')
+            
+        } catch (error) {
+            console.log(error);
+            // Si ocurre un error, muestra solo la alerta de error
+            Alert.alert('Error', 'El usuario o la contraseña son incorrectos')
+        }
     }
-}
+
+    const onFooterLinkPress = () => {
+        navigation.navigate('Registro')
+    }
 
     return (
       <ImageBackground 
@@ -34,12 +44,12 @@ export default function Login(props) {
             <View style={styles.tarjeta}>
                 <View style={styles.cajaTexto}>
                     <TextInput placeholder="Usuario" style={{paddingHorizontal: 15}} 
-                    onChangeText={(text)=>setCorreo(text)}/>
+                    onChangeText={(text)=>setEmail(text)}/>
                 </View>
 
                 <View style={styles.cajaTexto}>
                     <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
-                    onChangeText={(text)=>setContraseña(text)} />
+                    onChangeText={(text)=>setPassword(text)} />
                 </View>
 
                 <View style={styles.padreBoton}>
@@ -47,6 +57,9 @@ export default function Login(props) {
                         <Text style={styles.TextoBoton}>Iniciar Sesión</Text>
                     </TouchableOpacity>
                 </View>
+            </View>
+            <View style={styles.footerView}>
+                <Text style={styles.footerText}>¿No tienes una cuenta? <Text onPress={onFooterLinkPress} style={styles.footerLink}>Regístrate</Text></Text>
             </View>
         </View>
       </ImageBackground>
@@ -105,5 +118,16 @@ const styles = StyleSheet.create({
     TextoBoton: {
         textAlign: 'center',
         color: 'white',
+    },
+    footerView: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    footerText: {
+        color: 'white',
+    },
+    footerLink: {
+        color: 'white',
+        textDecorationLine: 'underline',
     },
 });
