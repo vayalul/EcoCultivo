@@ -39,7 +39,7 @@ export default function Login(props) {
 
                 <View style={styles.cajaTexto}>
                     <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
-                    onChangeText={(text)=>setContraseña(text)} secureTextEntry={true}/>
+                    onChangeText={(text)=>setContraseña(text)} />
                 </View>
 
                 <View style={styles.padreBoton}>
