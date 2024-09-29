@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
 import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity, Alert } from 'react-native'; 
-import appFirebase from '../credenciales';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-
-//inicializamos Firestore
-const db = getFirestore(appFirebase);
-const auth = getAuth(appFirebase);
+import appFirebase, { db, auth } from '../credenciales';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function Registro({ navigation }) {
     //  Estado para manejar el correo y contraseña
@@ -33,7 +29,7 @@ export default function Registro({ navigation }) {
             Alert.alert('Error', 'Por favor, complete todos los campos');
             return; // Salir si hay campos vacios
         }
-        
+
         if (!validarEmail(email)) {
             Alert.alert('Error', 'El correo ingresado no es válido. Verifique su formato.')
             return; // Salir si el email es invalido

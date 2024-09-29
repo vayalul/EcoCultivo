@@ -1,5 +1,9 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
+import  { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -16,3 +20,11 @@ const firebaseConfig = {
 // Initialize Firebase
 const appFirebase = initializeApp(firebaseConfig);
 export default appFirebase
+
+// Initialize Firestore
+const db = getFirestore(appFirebase);
+
+// Initialize Auth
+const auth = getAuth(appFirebase);
+
+export { db, auth }; // Exportar db y auth
