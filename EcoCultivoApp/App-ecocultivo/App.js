@@ -15,9 +15,10 @@ function MyStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Login" component={Login} 
-      options={{
+      options={{ 
         title: 'Login',
         headerTintColor: 'white',
+        headerShown: false,
         headerTitleAlign: 'center',
         headerStyle: {
           backgroundColor: '#128C7E'},
@@ -30,7 +31,15 @@ function MyStack() {
         headerStyle: {
           backgroundColor: '#128C7E'},
       }} />
-      <Stack.Screen name="Registro" component={Registro} />
+      <Stack.Screen name="Registro" component={Registro} 
+       options={{
+        title: "'Home'",
+        headerTintColor: 'white',
+        headerShown: false,
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: '#128C7E'},
+          }} />
     </Stack.Navigator>
   );
 }

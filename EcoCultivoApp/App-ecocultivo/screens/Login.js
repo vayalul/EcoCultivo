@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity, Alert } from 'react-native'; 
 
 import appFirebase from '../credenciales'
-import {getAuth, signInWithEmailAndPassword} from 'firebase/auth'
+import {getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
+
 const auth = getAuth(appFirebase)
 
 export default function Login({ navigation }) {
 
     //creamos la variable de estado
-    const [email, setEmail] = useState()
-    const [password, setPassword] = useState()
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+
+    // implementamos el hook UseEffect para manejar la persistencia de la autenticacion de los usuarios
+    // al iniciar sesion en nuestro sistema
+    useEffect(() => {
+        const unsuscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Si el usuario esta logueado, redirigir a la pantalla Home
+                navigation.navigate('Home');
+        }
+    });
+    // Limpiamos el listener al desmontar el componente
+    return () => unsuscribe();
+    }, []);
 
     const logueo = async() => {
         try {
@@ -43,7 +57,7 @@ export default function Login({ navigation }) {
 
             <View style={styles.tarjeta}>
                 <View style={styles.cajaTexto}>
-                    <TextInput placeholder="Usuario" style={{paddingHorizontal: 15}} 
+                    <TextInput placeholder="Correo" style={{paddingHorizontal: 15}} 
                     onChangeText={(text)=>setEmail(text)}/>
                 </View>
 
@@ -75,6 +89,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingTop: 90,
     },
     logo: {
         width: 150,
@@ -104,6 +119,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#f3f3f3',
         borderRadius: 10,
         marginVertical: 10,
+        height: 25,
+        justifyContent: 'center',
     },
     padreBoton: {
         alignItems: 'center',

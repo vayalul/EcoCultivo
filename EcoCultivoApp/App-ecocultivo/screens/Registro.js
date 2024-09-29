@@ -1,7 +1,66 @@
-import React from 'react';
-import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity } from 'react-native'; 
+import React, { useState } from 'react';
+import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity, Alert } from 'react-native'; 
+import appFirebase from '../credenciales';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
-export default function Registro() {
+//inicializamos Firestore
+const db = getFirestore(appFirebase);
+const auth = getAuth(appFirebase);
+
+export default function Registro({ navigation }) {
+    //  Estado para manejar el correo y contraseña
+    const [nombre, setNombre] =  useState('');
+    const [username, setUsername] =  useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const onFooterLinkPress = () => {
+        navigation.navigate('Login');
+    };
+
+    // Utilizaremos Regex para verificar el formato del email
+    const validarEmail = (email) => {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    };
+
+    
+
+    // Funcion para registrar el usuario
+    const registroUsuario = async () => {
+        if (!nombre || !username || !email || !password) {
+            Alert.alert('Error', 'Por favor, complete todos los campos');
+            return; // Salir si hay campos vacios
+        }
+        
+        if (!validarEmail(email)) {
+            Alert.alert('Error', 'El correo ingresado no es válido. Verifique su formato.')
+            return; // Salir si el email es invalido
+        }
+
+        try {
+            // Creamos el usuario en Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+            // Obtenemos el UID del nuevo usuario
+            const user = userCredential.user;
+
+            // Guardamos el nombre y el username en Firestore
+            await setDoc(doc(db, "usuarios", user.uid), {
+                nombre:  nombre,
+                username: username,
+                email: email,
+            });
+
+            Alert.alert('Registro Exitoso', 'Bienvenido a EcoCultivo');
+            navigation.navigate('Login'); // Navegamos al login despues de registrarse
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Error', error.message);
+        }
+    };
+
     return (
       <ImageBackground 
         source={require('../assets/Fondo.png')}
@@ -13,21 +72,33 @@ export default function Registro() {
             </View>
 
             <View style={styles.tarjeta}>
-            <View style={styles.cajaTexto}>
-                    <TextInput placeholder="Nombre" style={{paddingHorizontal: 15}} />
-                </View>
-                <View style={styles.cajaTexto}>
-                    <TextInput placeholder="Email" style={{paddingHorizontal: 15}} />
-                </View>
 
                 <View style={styles.cajaTexto}>
-                    <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} />
+                <TextInput placeholder="Nombre" style={{paddingHorizontal: 15}} 
+                    onChangeText={(text)=>setNombre(text)}/>
+                </View>
+                <View style={styles.cajaTexto}>
+                <TextInput placeholder="Usuario" style={{paddingHorizontal: 15}} 
+                    onChangeText={(text)=>setUsername(text)}/>
+                </View>
+                <View style={styles.cajaTexto}>
+                <TextInput placeholder="Correo" style={{paddingHorizontal: 15}} 
+                    onChangeText={(text)=>setEmail(text)}/>
+                </View>
+                <View style={styles.cajaTexto}>
+                <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
+                    onChangeText={(text)=>setPassword(text)} />
                 </View>
                 <View style={styles.padreBoton}>
-                    <TouchableOpacity style={styles.cajaBoton}>
-                        <Text style={styles.TextoBoton}>Registrarse</Text>
-                    </TouchableOpacity>
+                <TouchableOpacity style={styles.cajaBoton} onPress={registroUsuario}>
+                <Text style={styles.TextoBoton}>Registrarse</Text>
+                </TouchableOpacity>
                 </View>
+
+            </View>
+
+            <View style={styles.footerView}>
+            <Text style={styles.footerText}>¿Ya tienes una cuenta? <Text onPress={onFooterLinkPress} style={styles.footerLink}>Inicia sesión</Text></Text>
             </View>
         </View>
       </ImageBackground>
@@ -43,6 +114,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingTop: 90,
     },
     logo: {
         width: 150,
@@ -72,6 +144,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#f3f3f3',
         borderRadius: 10,
         marginVertical: 10,
+        height: 25,
+        justifyContent: 'center',
+
     },
     padreBoton: {
         alignItems: 'center',
@@ -87,4 +162,15 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: 'white',
     },
+    footerView: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    footerText: {
+        color: 'white',
+    },
+    footerLink: {
+        color: 'white',
+        textDecorationLine: 'underline',
+    }
 });
