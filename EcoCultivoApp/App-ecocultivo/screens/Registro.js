@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity, Alert } from 'react-native'; 
 import appFirebase, { db, auth } from '../credenciales';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -11,6 +11,15 @@ export default function Registro({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
+    // Agregamos useEffect para limpiar los campos al cargar la pantalla de Registro
+    useEffect(() => {
+        // Limpiamos los campos de texto al cargar la pantalla de Registro
+        setNombre('');
+        setUsername('');
+        setEmail('');
+        setPassword('');
+    }, []);
+
     const onFooterLinkPress = () => {
         navigation.navigate('Login');
     };
@@ -22,7 +31,6 @@ export default function Registro({ navigation }) {
     };
 
     
-
     // Funcion para registrar el usuario
     const registroUsuario = async () => {
         if (!nombre || !username || !email || !password) {
@@ -49,6 +57,17 @@ export default function Registro({ navigation }) {
                 email: email,
             });
 
+        // Aquí agregamos el console.log() para verificar el UID del usuario ***
+        console.log("UID del usuario registrado:", user.uid);
+
+        // Guardamos el nombre y el username en Firestore
+        await setDoc(doc(db, "usuarios", user.uid), {
+            nombre: nombre,
+            username: username,
+            email: email,
+        });
+
+        // Alerta y navegacion dentro del sistema solo si el registro es exitoso
             Alert.alert('Registro Exitoso', 'Bienvenido a EcoCultivo');
             navigation.navigate('Login'); // Navegamos al login despues de registrarse
         } catch (error) {

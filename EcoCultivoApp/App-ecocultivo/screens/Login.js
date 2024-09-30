@@ -15,6 +15,10 @@ export default function Login({ navigation }) {
     // implementamos el hook UseEffect para manejar la persistencia de la autenticacion de los usuarios
     // al iniciar sesion en nuestro sistema
     useEffect(() => {
+        // Limpiamos los campos de texto al cargar la pantalla del Login
+        setEmail('');
+        setPassword('');
+
         const unsuscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 // Si el usuario esta logueado, redirigir a la pantalla Home
