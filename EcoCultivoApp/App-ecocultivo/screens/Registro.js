@@ -69,7 +69,7 @@ export default function Registro({ navigation }) {
 
         // Alerta y navegacion dentro del sistema solo si el registro es exitoso
             Alert.alert('Registro Exitoso', 'Bienvenido a EcoCultivo');
-            navigation.navigate('Login'); // Navegamos al login despues de registrarse
+            navigation.navigate('Home'); // Navegamos al login despues de registrarse
         } catch (error) {
             console.error(error);
             Alert.alert('Error', error.message);
