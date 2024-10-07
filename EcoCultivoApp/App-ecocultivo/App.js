@@ -4,8 +4,8 @@ import React from 'react';
 
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
+import MyTabs from './Navigation';
 import Login from './screens/Login';
-import Home from './screens/Home';
 import Registro from './screens/Registro';
 
 export default function App() {
@@ -24,7 +24,7 @@ function MyStack() {
         headerStyle: {
           backgroundColor: '#128C7E'},
       }} />
-      <Stack.Screen name="Home" component={Home} 
+      <Stack.Screen name="HomeTab" component={MyTabs} 
       options={{
         title: 'Home',
         headerTintColor: 'white',
