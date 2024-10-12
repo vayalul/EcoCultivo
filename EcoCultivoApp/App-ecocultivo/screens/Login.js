@@ -22,7 +22,7 @@ export default function Login({ navigation }) {
         const unsuscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 // Si el usuario esta logueado, redirigir a la pantalla Home
-                navigation.navigate('HomeTab');
+                navigation.navigate('Home');
         }
     });
     // Limpiamos el listener al desmontar el componente

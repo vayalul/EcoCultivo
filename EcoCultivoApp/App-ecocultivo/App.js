@@ -24,8 +24,9 @@ function MyStack() {
         headerStyle: {
           backgroundColor: '#128C7E'},
       }} />
-      <Stack.Screen name="HomeTab" component={MyTabs} 
+      <Stack.Screen name="Home" component={MyTabs} 
       options={{
+        headerShown: false,
         title: 'Home',
         headerTintColor: 'white',
         headerTitleAlign: 'center',
