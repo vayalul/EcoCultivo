@@ -10,6 +10,7 @@ export default function Registro({ navigation }) {
     const [username, setUsername] =  useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    // const [confirmPassword, setConfirmPassword] = useState(''); // Estado para confirmar password
 
     // Agregamos useEffect para limpiar los campos al cargar la pantalla de Registro
     useEffect(() => {
@@ -18,6 +19,7 @@ export default function Registro({ navigation }) {
         setUsername('');
         setEmail('');
         setPassword('');
+       // setConfirmPassword('');  // Limpiar confirmación
     }, []);
 
     const onFooterLinkPress = () => {
@@ -89,7 +91,7 @@ export default function Registro({ navigation }) {
             <View style={styles.tarjeta}>
 
                 <View style={styles.cajaTexto}>
-                <TextInput placeholder="Nombre" style={{paddingHorizontal: 15}} 
+                <TextInput placeholder="Nombre Completo" style={{paddingHorizontal: 15}} 
                     onChangeText={(text)=>setNombre(text)}/>
                 </View>
                 <View style={styles.cajaTexto}>
@@ -104,6 +106,10 @@ export default function Registro({ navigation }) {
                 <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
                     onChangeText={(text)=>setPassword(text)} />
                 </View>
+                {/* <View style={styles.cajaTexto}>
+                    <TextInput placeholder="Confirmar contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true}
+                        onChangeText={(text) => setConfirmPassword(text)} />
+                </View> */}
                 <View style={styles.padreBoton}>
                 <TouchableOpacity style={styles.cajaBoton} onPress={registroUsuario}>
                 <Text style={styles.TextoBoton}>Registrarse</Text>

@@ -3,6 +3,7 @@ import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpa
 
 import appFirebase from '../credenciales'
 import {getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 const auth = getAuth(appFirebase)
 
@@ -22,7 +23,7 @@ export default function Login({ navigation }) {
         const unsuscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 // Si el usuario esta logueado, redirigir a la pantalla Home
-                navigation.navigate('HomeTab');
+                navigation.navigate('Home');
         }
     });
     // Limpiamos el listener al desmontar el componente
@@ -30,6 +31,13 @@ export default function Login({ navigation }) {
     }, []);
 
     const logueo = async() => {
+
+        // Verificamos si los campos de email o password estan vacios
+        if (email === '' ||  password === '') {
+            Alert.alert('Por favor, ingrese un correo y una contraseña válidos');
+            return; // Salimos de la funcion si los campos estan vacios
+        }
+
         try {
             // Intentar iniciar sesión
             await signInWithEmailAndPassword(auth, email, password)
@@ -47,6 +55,10 @@ export default function Login({ navigation }) {
 
     const onFooterLinkPress = () => {
         navigation.navigate('Registro')
+    }
+
+    const onFooterLinkPress2 = () => {
+        navigation.navigate('NotFoundPage')
     }
 
     const onForgotPasswordPress = () => {
@@ -86,8 +98,11 @@ export default function Login({ navigation }) {
                     </TouchableOpacity>
                 </View>
             </View>
-            <View style={styles.footerView}>
+            <View style={styles.footerView1}>
                 <Text style={styles.footerText}>¿No tienes una cuenta? <Text onPress={onFooterLinkPress} style={styles.footerLink}>Regístrate</Text></Text>
+            </View>
+            <View style={styles.footerView2}>
+                <Text style={styles.footerText}>¿Necesitas ayuda? <Text onPress={onFooterLinkPress2} style={styles.footerLink}>Centro de Ayuda</Text><AntDesign name="customerservice" size={24} color="white" /></Text>
             </View>
         </View>
       </ImageBackground>
@@ -151,6 +166,14 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     footerView: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    footerView1: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    footerView2: {
         marginTop: 20,
         alignItems: 'center',
     },
