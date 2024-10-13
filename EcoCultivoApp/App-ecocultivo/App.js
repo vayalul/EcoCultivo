@@ -7,6 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import MyTabs from './Navigation';
 import Login from './screens/Login';
 import Registro from './screens/Registro';
+import PasswordReset from './screens/PasswordReset';
 
 export default function App() {
 
@@ -35,7 +36,16 @@ function MyStack() {
       }} />
       <Stack.Screen name="Registro" component={Registro} 
        options={{
-        title: "'Home'",
+        title: 'Home',
+        headerTintColor: 'white',
+        headerShown: false,
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: '#128C7E'},
+          }} />
+      <Stack.Screen name="PasswordReset" component={PasswordReset} 
+       options={{
+        title: 'Restablecer Contraseña',
         headerTintColor: 'white',
         headerShown: false,
         headerTitleAlign: 'center',

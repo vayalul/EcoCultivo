@@ -36,7 +36,7 @@ export default function Login({ navigation }) {
             
             // Solo muestra la alerta y navega si el login fue exitoso
             Alert.alert('Iniciando Sesión', 'Accediendo...')
-            navigation.navigate('Home')
+            navigation.navigate('HomeTab')
             
         } catch (error) {
             console.log(error);
@@ -47,6 +47,10 @@ export default function Login({ navigation }) {
 
     const onFooterLinkPress = () => {
         navigation.navigate('Registro')
+    }
+
+    const onForgotPasswordPress = () => {
+        navigation.navigate('PasswordReset');
     }
 
     return (
@@ -68,6 +72,12 @@ export default function Login({ navigation }) {
                 <View style={styles.cajaTexto}>
                     <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
                     onChangeText={(text)=>setPassword(text)} />
+                </View>
+
+                <View style={styles.footerView}>
+                    <Text style={styles.footerResetText}>
+                    ¿Olvidaste tu contraseña?{' '}
+                    <Text onPress={onForgotPasswordPress} style={styles.footerLinkReset}>Recuperar</Text></Text>
                 </View>
 
                 <View style={styles.padreBoton}>
@@ -144,6 +154,17 @@ const styles = StyleSheet.create({
         marginTop: 20,
         alignItems: 'center',
     },
+    footerResetText: {
+        color: 'grey',
+        alignItems: 'center',
+        fontSize:  13,
+    },
+    footerLinkReset: {
+        color: 'grey',
+        textDecorationLine: 'underline',
+        fontSize:  13,
+
+    },
     footerText: {
         color: 'white',
     },
@@ -151,4 +172,5 @@ const styles = StyleSheet.create({
         color: 'white',
         textDecorationLine: 'underline',
     },
+    
 });
