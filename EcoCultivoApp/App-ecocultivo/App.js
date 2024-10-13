@@ -8,7 +8,7 @@ import MyTabs from './Navigation';
 import Login from './screens/Login';
 import Registro from './screens/Registro';
 import PasswordReset from './screens/PasswordReset';
-
+import NotFoundPage from './screens/NotFoundPage';
 export default function App() {
 
   const Stack = createStackNavigator();
@@ -36,7 +36,7 @@ function MyStack() {
       }} />
       <Stack.Screen name="Registro" component={Registro} 
        options={{
-        title: 'Home',
+        title: 'Registro',
         headerTintColor: 'white',
         headerShown: false,
         headerTitleAlign: 'center',
@@ -46,6 +46,15 @@ function MyStack() {
       <Stack.Screen name="PasswordReset" component={PasswordReset} 
        options={{
         title: 'Restablecer Contraseña',
+        headerTintColor: 'white',
+        headerShown: false,
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: '#128C7E'},
+          }} />
+      <Stack.Screen name="NotFoundPage" component={NotFoundPage} 
+       options={{
+        title: 'Not Found 404',
         headerTintColor: 'white',
         headerShown: false,
         headerTitleAlign: 'center',
