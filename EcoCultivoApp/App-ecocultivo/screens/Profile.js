@@ -57,7 +57,10 @@ const Profile = () => {
         try {
             await signOut(auth);
             Alert.alert('Éxito', 'Sesión cerrada correctamente');
-            navigation.navigate('Login');
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+            });
         } catch (error) {
             console.error('Error al cerrar sesión', error);
             Alert.alert('Error', 'Hubo un error al cerrar sesión'); 

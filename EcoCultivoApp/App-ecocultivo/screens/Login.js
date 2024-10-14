@@ -54,7 +54,10 @@ export default function Login({ navigation }) {
     }
 
     const onFooterLinkPress = () => {
-        navigation.navigate('Registro')
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'Registro' }],
+        })
     }
 
     const onFooterLinkPress2 = () => {

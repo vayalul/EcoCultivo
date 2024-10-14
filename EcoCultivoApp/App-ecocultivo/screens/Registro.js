@@ -10,20 +10,37 @@ export default function Registro({ navigation }) {
     const [username, setUsername] =  useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    // const [confirmPassword, setConfirmPassword] = useState(''); // Estado para confirmar password
+    const [confirmPassword, setConfirmPassword] = useState('');
+    
+    // Estado para manejar los errores
+    const [errorNombre, setErrorNombre] = useState('');
+    const [errorUsername, setErrorUsername] = useState('');
+    const [errorEmail, setErrorEmail] = useState('');
+    const [errorPassword, setErrorPassword] = useState('');
+    const [errorConfirmPassword, setErrorConfirmPassword] = useState('');
 
-    // Agregamos useEffect para limpiar los campos al cargar la pantalla de Registro
+
     useEffect(() => {
         // Limpiamos los campos de texto al cargar la pantalla de Registro
         setNombre('');
         setUsername('');
         setEmail('');
         setPassword('');
-       // setConfirmPassword('');  // Limpiar confirmación
+        setConfirmPassword('');
+        
+        // Limpiamos los errores al cargar la pantalla de Registro
+        setErrorNombre('');
+        setErrorUsername('');
+        setErrorEmail('');
+        setErrorPassword('');
+        setErrorConfirmPassword('');
     }, []);
 
     const onFooterLinkPress = () => {
-        navigation.navigate('Login');
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+        });
     };
 
     // Utilizaremos Regex para verificar el formato del email
@@ -32,17 +49,76 @@ export default function Registro({ navigation }) {
         return regex.test(email);
     };
 
-    
+    // Función para manejar el cambio en el campo de nombre
+    const handleNombreChange = (text) => {
+        setNombre(text);
+        if(!text) {
+            setErrorNombre('Este campo es obligatorio');
+        } else{
+            setErrorNombre('');
+        }
+    };
+
+    // Función para manejar el cambio en el campo de username
+    const handleUsernameChange = (text) => {
+        setUsername(text);
+        if(!text) {
+            setErrorUsername('Este campo es obligatorio');
+        } else {
+            setErrorUsername('');
+        }
+    };
+
+    // Función para manejar el cambio en el campo de email
+    const handleEmailChange = (text) => {
+        setEmail(text);
+        if (validarEmail(text)) {
+            setErrorEmail('');
+        } else if (!text) {
+            setErrorEmail('Este campo es obligatorio');
+        } else {
+            setErrorEmail('El correo ingresado no es válido');
+        }
+    };
+
+    // Función para manejar el cambio en el campo de contraseña
+    const handlePasswordChange = (text) => {
+        setPassword(text);
+        if(!text) {
+            setErrorPassword('Este campo es obligatorio');
+        } else if (password.length < 5) {
+            setErrorPassword('Debe tener mas de 5 caracteres');
+        } else {
+            setErrorPassword('');
+        }
+    };
+
+    // Función para manejar el cambio en el campo de confirmar contraseña
+    const handleConfirmPasswordChange = (text) => {
+        setConfirmPassword(text);
+        if(!text) {
+            setErrorConfirmPassword('El campo es obligatorio');
+        } else if(password !== text) {
+            setErrorConfirmPassword('Las contraseñas no coinciden'); 
+        } else {
+            setErrorConfirmPassword('');
+        }
+    };
+
+
     // Funcion para registrar el usuario
     const registroUsuario = async () => {
-        if (!nombre || !username || !email || !password) {
-            Alert.alert('Error', 'Por favor, complete todos los campos');
-            return; // Salir si hay campos vacios
-        }
+        //limpiar errores al intentar registrar
+        setErrorNombre('');
+        setErrorUsername('');
+        setErrorEmail('');
+        setErrorPassword('');
+        setErrorConfirmPassword('');
 
-        if (!validarEmail(email)) {
-            Alert.alert('Error', 'El correo ingresado no es válido. Verifique su formato.')
-            return; // Salir si el email es invalido
+        // Verificar si hay errores
+        if (errorNombre || errorUsername || errorEmail || errorPassword || errorConfirmPassword) {
+            Alert.alert('Por favor, corrige los errores antes de continuar.');
+            return; // Salimos de la función si hay errores
         }
 
         try {
@@ -71,10 +147,10 @@ export default function Registro({ navigation }) {
 
         // Alerta y navegacion dentro del sistema solo si el registro es exitoso
             Alert.alert('Registro Exitoso', 'Bienvenido a EcoCultivo');
-            navigation.navigate('HomeTab'); // Navegamos al login despues de registrarse
+            navigation.navigate('Home'); // Navegamos al login despues de registrarse
         } catch (error) {
-            console.error(error);
-            Alert.alert('Error', error.message);
+            console.log("Error al registrar el usuario", error);
+            Alert.alert('Error al registrase');
         }
     };
 
@@ -89,27 +165,41 @@ export default function Registro({ navigation }) {
             </View>
 
             <View style={styles.tarjeta}>
-
                 <View style={styles.cajaTexto}>
-                <TextInput placeholder="Nombre Completo" style={{paddingHorizontal: 15}} 
-                    onChangeText={(text)=>setNombre(text)}/>
+                <TextInput placeholder="Nombre" style={{paddingHorizontal: 15}} 
+                    onChangeText={handleNombreChange}/>
+                <Text style={errorNombre? styles.errorText :{ display: 'none'}}>
+                    {errorNombre}
+                </Text>
                 </View>
                 <View style={styles.cajaTexto}>
                 <TextInput placeholder="Usuario" style={{paddingHorizontal: 15}} 
-                    onChangeText={(text)=>setUsername(text)}/>
+                    onChangeText={handleUsernameChange}/>
+                <Text style={errorUsername? styles.errorText :{ display: 'none'}}>
+                    {errorUsername}
+                </Text>
                 </View>
                 <View style={styles.cajaTexto}>
                 <TextInput placeholder="Correo" style={{paddingHorizontal: 15}} 
-                    onChangeText={(text)=>setEmail(text)}/>
+                    onChangeText={handleEmailChange}/>
+                <Text style={errorEmail? styles.errorText :{ display: 'none'}}>
+                    {errorEmail}
+                </Text>
                 </View>
                 <View style={styles.cajaTexto}>
                 <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
-                    onChangeText={(text)=>setPassword(text)} />
+                    onChangeText={handlePasswordChange} />
+                <Text style={errorPassword? styles.errorText :{ display: 'none'}}>
+                    {errorPassword}
+                </Text>
                 </View>
-                {/* <View style={styles.cajaTexto}>
-                    <TextInput placeholder="Confirmar contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true}
-                        onChangeText={(text) => setConfirmPassword(text)} />
-                </View> */}
+                <View style={styles.cajaTexto}>
+                <TextInput placeholder="Confirmar Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
+                    onChangeText={handleConfirmPasswordChange} />
+                <Text style={errorConfirmPassword? styles.errorText :{ display: 'none'}}>
+                    {errorConfirmPassword}
+                </Text>
+                </View>
                 <View style={styles.padreBoton}>
                 <TouchableOpacity style={styles.cajaBoton} onPress={registroUsuario}>
                 <Text style={styles.TextoBoton}>Registrarse</Text>
@@ -149,7 +239,7 @@ const styles = StyleSheet.create({
     tarjeta: {
         margin: 30,
         backgroundColor: 'white',
-        borderRadius: 20,
+        borderRadius: 30,
         width: '70%',
         padding: 20,
         shadowColor: '#000',
@@ -164,10 +254,9 @@ const styles = StyleSheet.create({
     cajaTexto: {
         backgroundColor: '#f3f3f3',
         borderRadius: 10,
-        marginVertical: 10,
-        height: 25,
-        justifyContent: 'center',
-
+        marginVertical: 15,
+        height: 30,
+        justifyContent: 'flex-center',
     },
     padreBoton: {
         alignItems: 'center',
@@ -193,5 +282,10 @@ const styles = StyleSheet.create({
     footerLink: {
         color: 'white',
         textDecorationLine: 'underline',
+    },
+    errorText: {
+        color: 'red',
+        marginTop: 5,
+        textAlign: 'left', 
     }
 });
