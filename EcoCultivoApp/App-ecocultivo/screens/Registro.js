@@ -1,77 +1,81 @@
 import React, { useEffect, useState } from 'react';
-import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity, Alert } from 'react-native'; 
+import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity, Alert, Modal, Button, Touchable, ScrollView } from 'react-native'; 
 import appFirebase, { db, auth } from '../credenciales';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import Checkbox from '@react-native-community/checkbox';
 
 export default function Registro({ navigation }) {
-    //  Estado para manejar el correo y contraseña
     const [nombre, setNombre] =  useState('');
     const [username, setUsername] =  useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    // const [confirmPassword, setConfirmPassword] = useState(''); // Estado para confirmar password
+    const [isChecked, setIsChecked] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
 
-    // Agregamos useEffect para limpiar los campos al cargar la pantalla de Registro
     useEffect(() => {
-        // Limpiamos los campos de texto al cargar la pantalla de Registro
         setNombre('');
         setUsername('');
         setEmail('');
         setPassword('');
-       // setConfirmPassword('');  // Limpiar confirmación
     }, []);
 
     const onFooterLinkPress = () => {
         navigation.navigate('Login');
     };
 
-    // Utilizaremos Regex para verificar el formato del email
+    const showTermsModal = () => {
+        setModalVisible(true);
+    };
+
+    const aceptar = () => {
+        setIsChecked(true);
+        setModalVisible(false);
+    };
+
+    const rechazar = () => {
+        setIsChecked(false);
+        setModalVisible(false);
+    };
+
+    const onTextoLinkPress = () => {
+        showTermsModal();
+    };
+
     const validarEmail = (email) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
     };
 
-    
-    // Funcion para registrar el usuario
     const registroUsuario = async () => {
+        if (!isChecked) {
+            Alert.alert('Error', 'Debes aceptar los términos y condiciones');
+            return;
+        }
+
         if (!nombre || !username || !email || !password) {
             Alert.alert('Error', 'Por favor, complete todos los campos');
-            return; // Salir si hay campos vacios
+            return;
         }
 
         if (!validarEmail(email)) {
-            Alert.alert('Error', 'El correo ingresado no es válido. Verifique su formato.')
-            return; // Salir si el email es invalido
+            Alert.alert('Error', 'El correo ingresado no es válido. Verifique su formato.');
+            return;
         }
 
         try {
-            // Creamos el usuario en Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-            // Obtenemos el UID del nuevo usuario
             const user = userCredential.user;
 
-            // Guardamos el nombre y el username en Firestore
             await setDoc(doc(db, "usuarios", user.uid), {
-                nombre:  nombre,
+                nombre: nombre,
                 username: username,
                 email: email,
             });
 
-        // Aquí agregamos el console.log() para verificar el UID del usuario ***
-        console.log("UID del usuario registrado:", user.uid);
-
-        // Guardamos el nombre y el username en Firestore
-        await setDoc(doc(db, "usuarios", user.uid), {
-            nombre: nombre,
-            username: username,
-            email: email,
-        });
-
-        // Alerta y navegacion dentro del sistema solo si el registro es exitoso
+            console.log("UID del usuario registrado:", user.uid);
             Alert.alert('Registro Exitoso', 'Bienvenido a EcoCultivo');
-            navigation.navigate('HomeTab'); // Navegamos al login despues de registrarse
+            navigation.navigate('HomeTab');
         } catch (error) {
             console.error(error);
             Alert.alert('Error', error.message);
@@ -79,50 +83,98 @@ export default function Registro({ navigation }) {
     };
 
     return (
-      <ImageBackground 
-        source={require('../assets/Fondo.png')}
-        style={styles.fondo}
-        resizeMode="cover">
-        <View style={styles.padre}>
-            <View>
-                <Image source={require('../assets/Logo.png')} style={styles.logo} />
+        <ImageBackground 
+            source={require('../assets/Fondo.png')}
+            style={styles.fondo}
+            resizeMode="cover">
+            <View style={styles.padre}>
+                <View>
+                    <Image source={require('../assets/Logo.png')} style={styles.logo} />
+                </View>
+
+                <View style={styles.tarjeta}>
+                    <View style={styles.cajaTexto}>
+                        <TextInput placeholder="Nombre Completo" style={{ paddingHorizontal: 15 }} 
+                            onChangeText={(text) => setNombre(text)} />
+                    </View>
+                    <View style={styles.cajaTexto}>
+                        <TextInput placeholder="Usuario" style={{ paddingHorizontal: 15 }} 
+                            onChangeText={(text) => setUsername(text)} />
+                    </View>
+                    <View style={styles.cajaTexto}>
+                        <TextInput placeholder="Correo" style={{ paddingHorizontal: 15 }} 
+                            onChangeText={(text) => setEmail(text)} />
+                    </View>
+                    <View style={styles.cajaTexto}>
+                        <TextInput placeholder="Contraseña" style={{ paddingHorizontal: 15 }} secureTextEntry={true} 
+                            onChangeText={(text) => setPassword(text)} />
+                    </View>
+
+                    <TouchableOpacity onPress={() => setIsChecked(!isChecked)}>
+                        <Text style={styles.checkbox}>
+                            {isChecked ? '☑️' : '☐'} Acepto los {''}
+                            <Text onPress={onTextoLinkPress} style={styles.onTextoLink}>
+                                términos y condiciones
+                            </Text>
+                        </Text>
+                    </TouchableOpacity>
+
+                    <View style={styles.padreBoton}>
+                        <TouchableOpacity style={styles.cajaBoton} onPress={registroUsuario}>
+                            <Text style={styles.TextoBoton}>Registrarse</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                <View style={styles.footerView}>
+                    <Text style={styles.footerText}>
+                        ¿Ya tienes una cuenta? 
+                        <Text onPress={onFooterLinkPress} style={styles.footerLink}> Inicia sesión</Text>
+                    </Text>
+                </View>
             </View>
 
-            <View style={styles.tarjeta}>
+            {/* Modal */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => {
+                    setModalVisible(false);
+                }}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Términos y Condiciones</Text>
+                        <ScrollView style={styles.ScrollView}>
+                        <Text style={styles.modalText}>
+                        Bienvenido a EcoCultivo. Al utilizar nuestra aplicación, aceptas cumplir con estos términos y condiciones. Si no estás de acuerdo con alguna parte de estos términos, te recomendamos que no uses nuestra aplicación.
+                            {'\n\n'}
+                            1. Aceptación de Términos 
+                            {'\n'}
+                            Al acceder y utilizar EcoCultivo, aceptas estos Términos y Condiciones en su totalidad. Si no estás de acuerdo, debes abstenerte de utilizar nuestra aplicación.
+                            {'\n\n'}
+                            2. Descripción del Servicio 
+                            {'\n'}
+                            EcoCultivo es una aplicación diseñada para ayudar a los agricultores a acceder a información climática, compartir imágenes de sus cultivos y participar en un foro comunitario. Nos esforzamos por proporcionar información precisa y útil, pero no garantizamos su exactitud.
+                            {'\n\n'}
+                            3. Contacto
+                            {'\n'}
+                            Si tienes preguntas o comentarios sobre estos Términos y Condiciones, contáctanos mediante el Centro de Ayuda.
+                        </Text>
+                        </ScrollView>
 
-                <View style={styles.cajaTexto}>
-                <TextInput placeholder="Nombre Completo" style={{paddingHorizontal: 15}} 
-                    onChangeText={(text)=>setNombre(text)}/>
+                        <View style={styles.modalButtonContainer}>
+                            <TouchableOpacity onPress={rechazar} style={styles.modalButton}>
+                            <Text style={styles.modalButtonText}>Rechazar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={aceptar} style={styles.modalButton}>
+                            <Text style={styles.modalButtonText}>Aceptar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
-                <View style={styles.cajaTexto}>
-                <TextInput placeholder="Usuario" style={{paddingHorizontal: 15}} 
-                    onChangeText={(text)=>setUsername(text)}/>
-                </View>
-                <View style={styles.cajaTexto}>
-                <TextInput placeholder="Correo" style={{paddingHorizontal: 15}} 
-                    onChangeText={(text)=>setEmail(text)}/>
-                </View>
-                <View style={styles.cajaTexto}>
-                <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
-                    onChangeText={(text)=>setPassword(text)} />
-                </View>
-                {/* <View style={styles.cajaTexto}>
-                    <TextInput placeholder="Confirmar contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true}
-                        onChangeText={(text) => setConfirmPassword(text)} />
-                </View> */}
-                <View style={styles.padreBoton}>
-                <TouchableOpacity style={styles.cajaBoton} onPress={registroUsuario}>
-                <Text style={styles.TextoBoton}>Registrarse</Text>
-                </TouchableOpacity>
-                </View>
-
-            </View>
-
-            <View style={styles.footerView}>
-            <Text style={styles.footerText}>¿Ya tienes una cuenta? <Text onPress={onFooterLinkPress} style={styles.footerLink}>Inicia sesión</Text></Text>
-            </View>
-        </View>
-      </ImageBackground>
+            </Modal>
+        </ImageBackground>
     );
 }
 
@@ -167,7 +219,6 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         height: 25,
         justifyContent: 'center',
-
     },
     padreBoton: {
         alignItems: 'center',
@@ -183,6 +234,16 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: 'white',
     },
+    checkbox: {
+        marginVertical: 10,
+        fontSize: 14,
+        marginBottom: 15,
+        color: 'grey',
+    },
+    onTextoLink: {
+        color: 'grey',
+        textDecorationLine: 'underline',
+    },
     footerView: {
         marginTop: 20,
         alignItems: 'center',
@@ -193,5 +254,56 @@ const styles = StyleSheet.create({
     footerLink: {
         color: 'white',
         textDecorationLine: 'underline',
-    }
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '85%',
+        maxHeight: '60%',
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+        alignItems: 'center',
+        elevation: 5,
+    },
+    scrollView: {
+        width: '100%',
+        marginBottom: 20,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        color: 'gray',
+    },
+    modalText: {
+        fontSize: 16,
+        marginBottom: 20,
+        color: 'gray',
+    },
+    modalButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalButton: {
+        flex: 1, // Esto hará que los botones ocupen el mismo ancho
+        marginHorizontal: 20, // Espacio entre botones
+        alignItems: 'center',
+        backgroundColor: 'green',
+        borderColor: 'green', // Color del borde
+        borderWidth: 1, // Ancho del borde
+        paddingVertical: 15,
+        borderRadius:40,
+        marginTop: 20,
+        width: 150,
+    },
+    modalButtonText: {
+        color: 'white', // Color del texto
+        fontSize: 14,
+    },
 });

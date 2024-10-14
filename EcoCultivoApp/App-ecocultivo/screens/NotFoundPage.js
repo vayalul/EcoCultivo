@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
         color: 'white',
         borderRadius: 10,
         marginVertical: 10,
-        height: 25,
+        height: 20,
         justifyContent: 'center',
     },
 });
