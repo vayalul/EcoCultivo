@@ -10,18 +10,38 @@ export default function Registro({ navigation }) {
     const [username, setUsername] =  useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [isChecked, setIsChecked] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    
+    // Estado para manejar los errores
+    const [errorNombre, setErrorNombre] = useState('');
+    const [errorUsername, setErrorUsername] = useState('');
+    const [errorEmail, setErrorEmail] = useState('');
+    const [errorPassword, setErrorPassword] = useState('');
+    const [errorConfirmPassword, setErrorConfirmPassword] = useState('');
+
 
     useEffect(() => {
         setNombre('');
         setUsername('');
         setEmail('');
         setPassword('');
+        setConfirmPassword('');
+        
+        // Limpiamos los errores al cargar la pantalla de Registro
+        setErrorNombre('');
+        setErrorUsername('');
+        setErrorEmail('');
+        setErrorPassword('');
+        setErrorConfirmPassword('');
     }, []);
 
     const onFooterLinkPress = () => {
-        navigation.navigate('Login');
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+        });
     };
 
     const showTermsModal = () => {
@@ -47,20 +67,81 @@ export default function Registro({ navigation }) {
         return regex.test(email);
     };
 
+    // Función para manejar el cambio en el campo de nombre
+    const handleNombreChange = (text) => {
+        setNombre(text);
+        if(!text) {
+            setErrorNombre('Este campo es obligatorio');
+        } else{
+            setErrorNombre('');
+        }
+    };
+
+    // Función para manejar el cambio en el campo de username
+    const handleUsernameChange = (text) => {
+        setUsername(text);
+        if(!text) {
+            setErrorUsername('Este campo es obligatorio');
+        } else {
+            setErrorUsername('');
+        }
+    };
+
+    // Función para manejar el cambio en el campo de email
+    const handleEmailChange = (text) => {
+        setEmail(text);
+        if (validarEmail(text)) {
+            setErrorEmail('');
+        } else if (!text) {
+            setErrorEmail('Este campo es obligatorio');
+        } else {
+            setErrorEmail('El correo ingresado no es válido');
+        }
+    };
+
+    // Función para manejar el cambio en el campo de contraseña
+    const handlePasswordChange = (text) => {
+        setPassword(text);
+        if(!text) {
+            setErrorPassword('Este campo es obligatorio');
+        } else if (password.length < 5) {
+            setErrorPassword('Debe tener mas de 5 caracteres');
+        } else {
+            setErrorPassword('');
+        }
+    };
+
+    // Función para manejar el cambio en el campo de confirmar contraseña
+    const handleConfirmPasswordChange = (text) => {
+        setConfirmPassword(text);
+        if(!text) {
+            setErrorConfirmPassword('El campo es obligatorio');
+        } else if(password !== text) {
+            setErrorConfirmPassword('Las contraseñas no coinciden'); 
+        } else {
+            setErrorConfirmPassword('');
+        }
+    };
+
+    // Funcion para registrar el usuario
     const registroUsuario = async () => {
+        //limpiar errores al intentar registrar
+        setErrorNombre('');
+        setErrorUsername('');
+        setErrorEmail('');
+        setErrorPassword('');
+        setErrorConfirmPassword('');
+
+        // Verificar si hay errores
+        if (errorNombre || errorUsername || errorEmail || errorPassword || errorConfirmPassword) {
+            Alert.alert('Por favor, corrige los errores antes de continuar.');
+            return; // Salimos de la función si hay errores
+        }
+
+        // Verificar si hay errores
         if (!isChecked) {
-            Alert.alert('Error', 'Debes aceptar los términos y condiciones');
-            return;
-        }
-
-        if (!nombre || !username || !email || !password) {
-            Alert.alert('Error', 'Por favor, complete todos los campos');
-            return;
-        }
-
-        if (!validarEmail(email)) {
-            Alert.alert('Error', 'El correo ingresado no es válido. Verifique su formato.');
-            return;
+            Alert.alert('Por favor, acepta los términos y condiciones.');
+            return; // Salimos de la función si no se acepta
         }
 
         try {
@@ -75,15 +156,15 @@ export default function Registro({ navigation }) {
 
             console.log("UID del usuario registrado:", user.uid);
             Alert.alert('Registro Exitoso', 'Bienvenido a EcoCultivo');
-            navigation.navigate('HomeTab');
+            navigation.navigate('Home'); // Navegamos al login despues de registrarse
         } catch (error) {
-            console.error(error);
-            Alert.alert('Error', error.message);
+            console.log("Error al registrar el usuario", error);
+            Alert.alert('Error al registrase');
         }
     };
 
     return (
-        <ImageBackground 
+        <ImageBackground
             source={require('../assets/Fondo.png')}
             style={styles.fondo}
             resizeMode="cover">
@@ -91,39 +172,55 @@ export default function Registro({ navigation }) {
                 <View>
                     <Image source={require('../assets/Logo.png')} style={styles.logo} />
                 </View>
-
-                <View style={styles.tarjeta}>
-                    <View style={styles.cajaTexto}>
-                        <TextInput placeholder="Nombre Completo" style={{ paddingHorizontal: 15 }} 
-                            onChangeText={(text) => setNombre(text)} />
-                    </View>
-                    <View style={styles.cajaTexto}>
-                        <TextInput placeholder="Usuario" style={{ paddingHorizontal: 15 }} 
-                            onChangeText={(text) => setUsername(text)} />
-                    </View>
-                    <View style={styles.cajaTexto}>
-                        <TextInput placeholder="Correo" style={{ paddingHorizontal: 15 }} 
-                            onChangeText={(text) => setEmail(text)} />
-                    </View>
-                    <View style={styles.cajaTexto}>
-                        <TextInput placeholder="Contraseña" style={{ paddingHorizontal: 15 }} secureTextEntry={true} 
-                            onChangeText={(text) => setPassword(text)} />
-                    </View>
-
-                    <TouchableOpacity onPress={() => setIsChecked(!isChecked)}>
+            <View style={styles.tarjeta}>
+                <View style={styles.cajaTexto}>
+                <TextInput placeholder="Nombre" style={{paddingHorizontal: 15}} 
+                    onChangeText={handleNombreChange}/>
+                <Text style={errorNombre? styles.errorText :{ display: 'none'}}>
+                    {errorNombre}
+                </Text>
+                </View>
+                <View style={styles.cajaTexto}>
+                <TextInput placeholder="Usuario" style={{paddingHorizontal: 15}} 
+                    onChangeText={handleUsernameChange}/>
+                <Text style={errorUsername? styles.errorText :{ display: 'none'}}>
+                    {errorUsername}
+                </Text>
+                </View>
+                <View style={styles.cajaTexto}>
+                <TextInput placeholder="Correo" style={{paddingHorizontal: 15}} 
+                    onChangeText={handleEmailChange}/>
+                <Text style={errorEmail? styles.errorText :{ display: 'none'}}>
+                    {errorEmail}
+                </Text>
+                </View>
+                <View style={styles.cajaTexto}>
+                <TextInput placeholder="Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
+                    onChangeText={handlePasswordChange} />
+                <Text style={errorPassword? styles.errorText :{ display: 'none'}}>
+                    {errorPassword}
+                </Text>
+                </View>
+                <View style={styles.cajaTexto}>
+                <TextInput placeholder="Confirmar Contraseña" style={{paddingHorizontal: 15}} secureTextEntry={true} 
+                    onChangeText={handleConfirmPasswordChange} />
+                <Text style={errorConfirmPassword? styles.errorText :{ display: 'none'}}>
+                    {errorConfirmPassword}
+                </Text>
+                </View>
+                <TouchableOpacity onPress={() => setIsChecked(!isChecked)}>
                         <Text style={styles.checkbox}>
                             {isChecked ? '☑️' : '☐'} Acepto los {''}
                             <Text onPress={onTextoLinkPress} style={styles.onTextoLink}>
                                 términos y condiciones
                             </Text>
                         </Text>
-                    </TouchableOpacity>
-
-                    <View style={styles.padreBoton}>
-                        <TouchableOpacity style={styles.cajaBoton} onPress={registroUsuario}>
-                            <Text style={styles.TextoBoton}>Registrarse</Text>
-                        </TouchableOpacity>
-                    </View>
+                </TouchableOpacity>
+                </View>
+                <View style={styles.padreBoton}>
+                <TouchableOpacity style={styles.cajaBoton} onPress={registroUsuario}>
+                <Text style={styles.TextoBoton}>Registrarse</Text>
+                </TouchableOpacity>
                 </View>
 
                 <View style={styles.footerView}>
@@ -133,6 +230,7 @@ export default function Registro({ navigation }) {
                     </Text>
                 </View>
             </View>
+        
 
             {/* Modal */}
             <Modal
@@ -145,7 +243,7 @@ export default function Registro({ navigation }) {
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Términos y Condiciones</Text>
-                        <ScrollView style={styles.ScrollView}>
+                        <ScrollView style={styles.scrollView}>
                         <Text style={styles.modalText}>
                         Bienvenido a EcoCultivo. Al utilizar nuestra aplicación, aceptas cumplir con estos términos y condiciones. Si no estás de acuerdo con alguna parte de estos términos, te recomendamos que no uses nuestra aplicación.
                             {'\n\n'}
@@ -201,7 +299,7 @@ const styles = StyleSheet.create({
     tarjeta: {
         margin: 30,
         backgroundColor: 'white',
-        borderRadius: 20,
+        borderRadius: 30,
         width: '70%',
         padding: 20,
         shadowColor: '#000',
@@ -216,9 +314,9 @@ const styles = StyleSheet.create({
     cajaTexto: {
         backgroundColor: '#f3f3f3',
         borderRadius: 10,
-        marginVertical: 10,
-        height: 25,
-        justifyContent: 'center',
+        marginVertical: 15,
+        height: 30,
+        justifyContent: 'flex-center',
     },
     padreBoton: {
         alignItems: 'center',
@@ -305,5 +403,10 @@ const styles = StyleSheet.create({
     modalButtonText: {
         color: 'white', // Color del texto
         fontSize: 14,
+    },
+    errorText: {
+        color: 'red',
+        marginTop: 5,
+        textAlign: 'left',
     },
 });
