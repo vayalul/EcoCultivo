@@ -140,7 +140,7 @@ export default function Registro({ navigation }) {
 
         // Verificar si hay errores
         if (!isChecked) {
-            Alert.alert('Por favor, acepta los términos y condiciones.');
+            Alert.alert('Si deseas registrarte, debes aceptar los términos y condiciones.');
             return; // Salimos de la función si no se acepta
         }
 
@@ -156,7 +156,7 @@ export default function Registro({ navigation }) {
 
             console.log("UID del usuario registrado:", user.uid);
             Alert.alert('Registro Exitoso', 'Bienvenido a EcoCultivo');
-            navigation.navigate('Home'); // Navegamos al login despues de registrarse
+            navigation.navigate('HomeTab'); // Navegamos al login despues de registrarse
         } catch (error) {
             console.log("Error al registrar el usuario", error);
             Alert.alert('Error al registrase');
