@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Text, StyleSheet, View, Image, ImageBackground, TextInput, TouchableOpacity, Alert } from 'react-native'; 
 
 import appFirebase from '../credenciales'
-import {getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
+import {getAuth, signInWithEmailAndPassword, onAuthStateChanged} from 'firebase/auth'
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 const auth = getAuth(appFirebase)

@@ -156,7 +156,7 @@ export default function Registro({ navigation }) {
 
             console.log("UID del usuario registrado:", user.uid);
             Alert.alert('Registro Exitoso', 'Bienvenido a EcoCultivo');
-            navigation.navigate('HomeTab'); // Navegamos al login despues de registrarse
+            navigation.navigate('Home'); // Navegamos al login despues de registrarse
         } catch (error) {
             console.log("Error al registrar el usuario", error);
             Alert.alert('Error al registrase');
