@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { auth, db } from '../credenciales';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import getClima from '../clima';
 
 
 const Miscultivos = () => {
@@ -21,6 +23,26 @@ const Miscultivos = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [fecha, setFecha] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false); // Estado para mostrar/ocultar el DateTimePicker
+    const [clima, setClima] = useState(null);
+    const [nombreUsuario, setNombreUsuario] = useState('');
+
+    const getWeatherIcon = (weatherCondition) => {
+        switch (weatherCondition.toLowerCase()) {
+            case 'clear':
+                return 'weather-sunny'; // Ícono para clima despejado
+            case 'clouds':
+                return 'weather-cloudy'; // Ícono para nublado
+            case 'rain':
+                return 'weather-rainy'; // Ícono para lluvia
+            case 'snow':
+                return 'weather-snowy'; // Ícono para nieve
+            case 'thunderstorm':
+                return 'weather-lightning'; // Ícono para tormenta
+            // Agrega más casos según sea necesario
+            default:
+                return 'weather-sunset'; // Ícono por defecto
+        }
+    };
 
     const agregarCultivo = async () => {
         const userId = auth.currentUser.uid;
@@ -61,13 +83,49 @@ const Miscultivos = () => {
     };
 
     useEffect(() => {
+        const user = auth.currentUser;
+        if (user) {
+            setNombreUsuario(user.displayName ? user.displayName : "Usuario sin nombre");
+        }
+    
+        const fetchClima = async () => {
+            console.log('Fetching weather data...');
+            try {
+                const climaData = await getClima();
+                console.log('Weather data received:', climaData);
+                setClima(climaData);
+            } catch (error) {
+                console.error('Error al obtener el clima:', error);
+            }
+        };
+    
+        fetchClima();
         obtenerCultivos();
     }, []);
+    
 
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Mis Cultivos</Text>
+            </View>
+
+               <View style={styles.climaContainer}>
+                <Text style={styles.welcomeText}>Bienvenido {nombreUsuario}</Text>
+                {clima ? (
+                    <>
+                        <Text style={styles.climaText}>
+                            El clima de hoy es {Math.round(clima.main.temp)}°C
+                        </Text>
+                        <MaterialCommunityIcons
+                            name={getWeatherIcon(clima.weather[0].main)} // Usa la función de mapeo aquí
+                            size={50}
+                            color="black"
+                        />
+                    </>
+                ) : (
+                    <Text style={styles.climaText}>Cargando clima...</Text>
+                )}
             </View>
 
             {cultivos.length === 0 ? (
@@ -143,7 +201,7 @@ const styles = StyleSheet.create({
     container: { 
         flex: 1, 
         paddingHorizontal: 20, 
-        paddingTop: 20
+        paddingTop: 20,
     },
     header: { 
         marginBottom: 20,
@@ -151,6 +209,24 @@ const styles = StyleSheet.create({
     title: { 
         fontSize: 24, 
         fontWeight: 'bold',
+    },
+    climaContainer: {
+        backgroundColor: '#d9f2d9', // Fondo verde claro
+        padding: 20,
+        borderRadius: 10,
+        marginBottom: 20,
+        alignItems: 'center',
+    },
+    welcomeText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'black',
+        marginBottom: 5,
+    },
+    climaText: {
+        fontSize: 16,
+        marginBottom: 5,
+        color: 'black',
     },
     noCultivosContainer: { 
         alignItems: 'center', 
