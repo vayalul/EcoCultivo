@@ -44,7 +44,7 @@ export default function Login({ navigation }) {
             
             // Solo muestra la alerta y navega si el login fue exitoso
             Alert.alert('Iniciando Sesión', 'Accediendo...')
-            navigation.navigate('HomeTab')
+            navigation.navigate('Home')
             
         } catch (error) {
             console.log(error);

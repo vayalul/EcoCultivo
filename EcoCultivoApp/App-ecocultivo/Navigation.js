@@ -1,7 +1,6 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Home from "./screens/Home";
 import Miscultivos from "./screens/Miscultivos";
 import Comunidad from "./screens/Comunidad";
 import Mercado from "./screens/Mercado";
@@ -11,18 +10,11 @@ const Tab = createBottomTabNavigator();
 
 function MyTabs() {
     return (
-        <Tab.Navigator initialRouteName="Home"
+        <Tab.Navigator initialRouteName="Miscultivos"
         screenOptions={{
             tabBarActiveTintColor: 'green',
             headerShown: false,
         }}>
-        <Tab.Screen name="HomeTab" component={Home} 
-        options={{
-            safeAreaView: true,
-            tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons name="home" size={30} color= {color} />
-            ),
-        }}/>
         <Tab.Screen name="Miscultivos" component={Miscultivos}
         options={{
             tabBarLabel: 'Mis Cultivos',

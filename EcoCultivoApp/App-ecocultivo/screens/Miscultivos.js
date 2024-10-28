@@ -24,25 +24,21 @@ const Miscultivos = () => {
     const [fecha, setFecha] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false); // Estado para mostrar/ocultar el DateTimePicker
     const [clima, setClima] = useState(null);
-    const [nombreUsuario, setNombreUsuario] = useState('');
+    const [ubicacion, setUbicacion] = useState('');
+    const [loadingClima, setLoadingClima] = useState(true);
 
-    const getWeatherIcon = (weatherCondition) => {
-        switch (weatherCondition.toLowerCase()) {
-            case 'clear':
-                return 'weather-sunny'; // Ícono para clima despejado
-            case 'clouds':
-                return 'weather-cloudy'; // Ícono para nublado
-            case 'rain':
-                return 'weather-rainy'; // Ícono para lluvia
-            case 'snow':
-                return 'weather-snowy'; // Ícono para nieve
-            case 'thunderstorm':
-                return 'weather-lightning'; // Ícono para tormenta
-            // Agrega más casos según sea necesario
-            default:
-                return 'weather-sunset'; // Ícono por defecto
+    const getClimaStyle = (temperature) => {
+        if (temperature < 10) {
+            return { backgroundColor: '#b3d9ff', icon: 'weather-snowy' };
+        } else if (temperature >= 10 && temperature <= 25) {
+            return { backgroundColor: '#d9f2d9', icon: 'weather-partly-cloudy' };
+        } else {
+            return { backgroundColor: '#ffd9b3', icon: 'weather-sunny' };
         }
     };
+
+    // En el renderizado
+    const climaStyle = clima ? getClimaStyle(Math.round(clima.main.temp)) : { backgroundColor: '#d9f2d9', icon: 'weather-sunset' };
 
     const agregarCultivo = async () => {
         const userId = auth.currentUser.uid;
@@ -52,7 +48,7 @@ const Miscultivos = () => {
             return;
         }
 
-        const imagenCultivo = imageCultivos[nuevoCultivo.toLowerCase()] || 'https://firebasestorage.googleapis.com/v0/b/ecocultivoapp.appspot.com/o/imagecultivos%2Fdefecto.png?alt=media&token=8a3a5acc-2d84-45b2-9175-8f7220308423';
+        const imagenCultivo = imageCultivos[nuevoCultivo.toLowerCase()] || imageCultivos['defecto'];
 
         try {
             // Agregar el cultivo a Firestore
@@ -75,30 +71,31 @@ const Miscultivos = () => {
     };
 
     const obtenerCultivos = async () => {
+       try {
         const userId = auth.currentUser.uid;
         const q = query(collection(db, 'cultivos'), where('userId', '==', userId));
         const querySnapshot = await getDocs(q);
         const cultivosData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setCultivos(cultivosData);
+    } catch (error) {
+        console.error("Error al obtener cultivos:", error);
+    }
     };
 
     useEffect(() => {
-        const user = auth.currentUser;
-        if (user) {
-            setNombreUsuario(user.displayName ? user.displayName : "Usuario sin nombre");
-        }
-    
         const fetchClima = async () => {
-            console.log('Fetching weather data...');
             try {
                 const climaData = await getClima();
-                console.log('Weather data received:', climaData);
-                setClima(climaData);
+                if (climaData) {
+                    setClima(climaData);
+                    setUbicacion(climaData.name);
+                }
             } catch (error) {
                 console.error('Error al obtener el clima:', error);
+            } finally {
+                setLoadingClima(false); // Finaliza la carga
             }
         };
-    
         fetchClima();
         obtenerCultivos();
     }, []);
@@ -106,27 +103,23 @@ const Miscultivos = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Mis Cultivos</Text>
-            </View>
-
-               <View style={styles.climaContainer}>
-                <Text style={styles.welcomeText}>Bienvenido {nombreUsuario}</Text>
-                {clima ? (
-                    <>
-                        <Text style={styles.climaText}>
-                            El clima de hoy es {Math.round(clima.main.temp)}°C
-                        </Text>
-                        <MaterialCommunityIcons
-                            name={getWeatherIcon(clima.weather[0].main)} // Usa la función de mapeo aquí
-                            size={50}
-                            color="black"
-                        />
-                    </>
-                ) : (
-                    <Text style={styles.climaText}>Cargando clima...</Text>
-                )}
-            </View>
+            <View style={styles.headerContainer}>
+            <Text style={styles.title}>Mis Cultivos</Text>
+            {loadingClima ? (
+                <Text>Cargando clima...</Text>
+            ) : clima ? (
+                <View style={[styles.climaContainer, { backgroundColor: climaStyle.backgroundColor }]}>
+                    <Text style={styles.climaText}>{ubicacion}: {Math.round(clima.main.temp)}°C</Text>
+                    <MaterialCommunityIcons
+                        name={climaStyle.icon}
+                        size={24}
+                        color="black"
+                    />
+                </View>
+            ) : (
+                <Text>Error al cargar el clima</Text>
+            )}
+        </View>
 
             {cultivos.length === 0 ? (
                 <View style={styles.noCultivosContainer}>
@@ -211,22 +204,16 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     climaContainer: {
-        backgroundColor: '#d9f2d9', // Fondo verde claro
-        padding: 20,
-        borderRadius: 10,
-        marginBottom: 20,
+        flexDirection: 'row',
         alignItems: 'center',
+        padding: 10,
+        borderRadius: 10,
     },
-    welcomeText: {
+    climaText: {
         fontSize: 18,
         fontWeight: 'bold',
         color: 'black',
-        marginBottom: 5,
-    },
-    climaText: {
-        fontSize: 16,
-        marginBottom: 5,
-        color: 'black',
+        marginRight: 5,
     },
     noCultivosContainer: { 
         alignItems: 'center', 
