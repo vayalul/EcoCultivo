@@ -19,6 +19,7 @@
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/stack": "^6.4.1",
+    "axios": "^1.7.7",
     "expo": "~51.0.37",
     "expo-image-picker": "~15.0.7",
     "expo-status-bar": "~1.12.1",
@@ -31,7 +32,8 @@
     "react-native-screens": "3.31.1",
     "react-native-svg": "15.2.0",
     "react-native-web": "~0.19.10",
-    "@react-native-community/datetimepicker": "8.0.1"
+    "@react-native-community/datetimepicker": "8.0.1",
+    "expo-location": "~17.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
