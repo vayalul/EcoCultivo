@@ -1,267 +1,389 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, FlatList, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { db, auth, storage } from '../credenciales';
+import { collection, addDoc, updateDoc, doc, arrayUnion, arrayRemove, onSnapshot, getDoc, Timestamp } from 'firebase/firestore';
+import { uploadBytes, getDownloadURL, ref } from 'firebase/storage';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native';
 
-const Comunidad = () => {
-    const [posts, setPosts] = useState([
-        { id: '1', username: 'Marc00s', content: '¡Hola a todos! Algun consejo para cultivar papas?.', timestamp: 'Hace 2 horas', comments: [] },
-        { id: '2', username: 'Ric4rd0', content: 'Alguien tiene consejos para cuidar mi cultivo de tomate?', timestamp: 'Hace 1 día', comments: [] },
-        { id: '3', username: 'MyFiurerJ0se', content: 'Saben si llovera en puente alto?', timestamp: 'Hace 3 días', comments: [] },
-    ]);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [newPostContent, setNewPostContent] = useState('');
-    const [selectedPost, setSelectedPost] = useState(null);
-    const [commentText, setCommentText] = useState('');
+const ComunidadScreen = () => {
+  const [posts, setPosts] = useState([]);
+  const [newPostContent, setNewPostContent] = useState('');
+  const [imageUri, setImageUri] = useState(null);
+  const [newComment, setNewComment] = useState(''); // Estado para el nuevo comentario
+  const [currentPostId, setCurrentPostId] = useState(null); // Estado para el ID del post actual
 
-    const agregarPost = () => {
-        if (newPostContent.trim()) {
-            const nuevoPost = {
-                id: (posts.length + 1).toString(),
-                username: 'usuarioNuevo', // Aquí puedes usar el nombre de usuario actual
-                content: newPostContent,
-                timestamp: 'Ahora mismo', // Puedes agregar lógica para manejar las fechas
-                comments: [],
-            };
-            setPosts([...posts, nuevoPost]);
-            setNewPostContent(''); // Limpiar el campo de texto
-            setModalVisible(false); // Cerrar el modal
-        } else {
-            alert('Por favor, ingresa un contenido para el post.');
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'comunidadd'), (snapshot) => {
+      const postsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+
+      setPosts(postsData);
+    });
+    return unsubscribe;
+  }, []);
+
+  const uploadImage = async (uri) => {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+  
+    const storageRef = ref(storage, `comunidadd/${auth.currentUser.uid}/${Date.now()}`);
+    await uploadBytes(storageRef, blob);
+    return await getDownloadURL(storageRef);
+  };
+
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim()) {
+        Alert.alert('Error', 'El contenido del post no puede estar vacío.');
+        return;
+    }
+
+    const postsRef = collection(db, 'comunidadd');
+
+    try {
+        // Obtener el documento del usuario para obtener el username
+        const userDoc = await getDoc(doc(db, 'usuarios', auth.currentUser.uid));
+        const username = userDoc.exists() ? userDoc.data().username : 'Usuario Desconocido'; // Usa un valor por defecto si no existe
+
+        const newPostRef = await addDoc(postsRef, {
+            contenido: newPostContent,
+            fecha: new Date(),
+            userId: auth.currentUser.uid,
+            userName: username,
+            comentarios: [],
+            likes: [], // Inicializar likes como array vacío
+            likesCount: 0 // Inicializar likesCount en 0
+        });
+
+        if (imageUri) {
+            const imageUrl = await uploadImage(imageUri);
+            await updateDoc(newPostRef, { imageurl: imageUrl });
         }
+
+        console.log('Post creado con ID:', newPostRef.id);
+        setNewPostContent(''); // Limpiar el campo de texto del post
+    } catch (error) {
+        console.error('Error al crear el post', error);
+        Alert.alert('Error', 'Hubo un error al crear el post');
+    }
     };
 
-    const agregarComentario = () => {
-        if (commentText.trim() && selectedPost) {
-            const updatedPosts = posts.map(post => {
-                if (post.id === selectedPost.id) {
-                    return {
-                        ...post,
-                        comments: [...post.comments, { text: commentText, username: 'usuarioNuevo' }], // Aquí puedes usar el nombre de usuario actual
-                    };
-                }
-                return post;
-            });
-            setPosts(updatedPosts);
-            setCommentText(''); // Limpiar el campo de texto del comentario
-            setSelectedPost(null); // Limpiar el post seleccionado
-        } else {
-            alert('Por favor, ingresa un comentario.');
-        }
-    };
+    const timeAgo = (date) => {
+        if (!date) return 'Fecha desconocida'; // Manejar el caso de fecha no definida
+        const now = new Date();
+        const seconds = Math.floor((now - date.toDate()) / 1000);
+        let interval = Math.floor(seconds / 31536000);
+        
+        if (interval >= 1) return `${interval} año${interval === 1 ? '' : 's'} atrás`;
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) return `${interval} mes${interval === 1 ? '' : 'es'} atrás`;
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) return `${interval} día${interval === 1 ? '' : 's'} atrás`;
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) return `${interval} hora${interval === 1 ? '' : 's'} atrás`;
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) return `${interval} minuto${interval === 1 ? '' : 's'} atrás`;
+        
+        return 'Ahora mismo';
+      };
 
-    const renderPost = ({ item }) => (
-        <View style={styles.postContainer}>
-            <Text style={styles.username}>{item.username}</Text>
-            <Text style={styles.content}>{item.content}</Text>
-            <Text style={styles.timestamp}>{item.timestamp}</Text>
-            <TouchableOpacity
-                style={styles.commentButton}
-                onPress={() => {
-                    setSelectedPost(item); // Guarda el post seleccionado
-                    setCommentText(''); // Limpia el campo de texto del comentario
-                }}
-            >
-                <Text style={styles.commentButtonText}>Comentar</Text>
-            </TouchableOpacity>
-            {item.comments.length > 0 && (
-                <View>
-                    {item.comments.map((comment, index) => (
-                        <Text key={index} style={styles.commentText}>
-                            {comment.username}: {comment.text}
-                        </Text>
-                    ))}
-                </View>
-            )}
+  const handleLike = async (postId) => {
+    try{
+        const postRef = doc(db, 'comunidadd', postId);
+        const post = posts.find((p) => p.id === postId);
+        const userId = auth.currentUser.uid;
+        // Crea una función para obtener el nombre de usuario si aún no lo tienes
+        const userDoc = await getDoc(doc(db, 'usuarios', userId)); // Asegúrate de que el ID del usuario sea el correcto.
+        const username = userDoc.exists() ? userDoc.data().username : null; // Asegúrate de que 'username' sea el campo correcto.
+
+        if (username) {
+            if (post.likes.some(like => like.username === username)) {
+                await updateDoc(postRef, {
+                    likes: arrayRemove({ username}), // Elimina el objeto de like
+                    likesCount: post.likesCount - 1
+                });
+            } else {
+                await updateDoc(postRef, {
+                    likes: arrayUnion({ username}), // Agrega el objeto de like
+                    likesCount: post.likesCount + 1
+                });
+            }
+        } else {
+            Alert.alert('Error', 'No se encontró el nombre de usuario.');
+        }
+    } catch (error) {
+        console.error('Error al dar like', error);
+        Alert.alert('Error', 'Hubo un error al dar like');
+    }
+  };
+
+  const handleAddComment = async (postId) => {
+    // Obtener el documento del usuario
+    const userDoc = await getDoc(doc(db, 'usuarios', auth.currentUser.uid));
+    const username = userDoc.exists() ? userDoc.data().username : 'Usuario Desconocido'; // Nombre de usuario por defecto
+
+    // Verificar que el nuevo comentario no esté vacío
+    if (!newComment.trim()) {
+        Alert.alert('Error', 'El comentario no puede estar vacío.');
+        return; // Salir si el comentario está vacío
+    }
+
+    try {
+        const postRef = doc(db, 'comunidadd', postId);
+
+        // Agregar el comentario a Firestore
+        await updateDoc(postRef, {
+            comentarios: arrayUnion({
+                comentario: newComment,
+                fecha: new Date(),
+                userId: auth.currentUser.uid,
+                username: username // Usa el nombre de usuario obtenido
+            })
+        });
+
+        setNewComment(''); // Limpiar el campo de texto del comentario
+        setCurrentPostId(null); // Restablecer el ID del post actual
+    } catch (error) {
+        console.error('Error al agregar comentario', error);
+        Alert.alert('Error', 'Hubo un error al agregar comentario');
+    }
+};
+
+  const handleCommentToggle = (postId) => {
+    if (currentPostId === postId) {
+      // Si el post actual es el mismo, ocultar el input
+      setCurrentPostId(null);
+    } else {
+      // Mostrar el input del nuevo post
+      setCurrentPostId(postId);
+    }
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.canceled) setImageUri(result.uri);
+  };
+
+  const renderItem = ({ item }) => (
+    
+    <View style={styles.postContainer}>
+    <Text style={styles.username}>{item.userName}</Text>
+    <Text>{item.contenido}</Text>
+    <Text style={styles.timeAgo}>{timeAgo(item.fecha)}</Text>
+    {item.imageurl && <Image source={{ uri: item.imageurl }} style={styles.postImage} />}
+    <View style={styles.likesContainer}>
+      <TouchableOpacity onPress={() => handleLike(item.id)} style={styles.likeButton}>
+        <Ionicons name={item.likes.some(like => like.username === auth.currentUser.displayName) ? "heart" : "heart-outline"} size={24} color="red" />
+        <Text style={styles.likeCount}>{item.likesCount}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => handleCommentToggle(item.id)}>
+        <Ionicons name="chatbubble-outline" size={24} color="green" />
+      </TouchableOpacity>
+    </View>
+    {currentPostId === item.id && (
+      <View style={styles.commentInputContainer}>
+        <TextInput
+          placeholder="Escribe tu comentario..."
+          value={newComment}
+          onChangeText={setNewComment}
+          style={styles.commentInput}
+        />
+        <TouchableOpacity onPress={() => handleAddComment(item.id)}>
+          <Ionicons name="paper-plane" size={24} color="green" />
+        </TouchableOpacity>
+      </View>
+    )}
+    <FlatList
+      data={item.comentarios}
+      renderItem={({ item: comment }) => (
+        <View style={styles.commentContainer}>
+          <Text style={styles.commentUser}>{comment.username}</Text>
+          <Text>{comment.comentario}</Text>
         </View>
-    );
+      )}
+      keyExtractor={(comment, index) => index.toString()}
+    />
+  </View>
+  );
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Comunidad</Text>
-                <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.crearPostButton}>
-                    <Text style={styles.crearPostButtonText}>Crear Post</Text>
-                </TouchableOpacity>
-            </View>
-            <FlatList
-                data={posts}
-                renderItem={renderPost}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.feed}
-            />
-
-            {/* Modal para crear un post */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible} // Solo el modal de crear post
-                onRequestClose={() => setModalVisible(false)} // Cerrar modal al presionar atrás
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Crear Post</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Escribe tu post aquí"
-                            value={newPostContent}
-                            onChangeText={setNewPostContent}
-                            multiline={true}
-                        />
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity onPress={agregarPost} style={styles.botonAgregar}>
-                                <Text style={styles.botonTexto}>Agregar</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.botonCancelar}>
-                                <Text style={styles.botonTexto}>Cancelar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-
-            {/* Modal para agregar comentario */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={selectedPost !== null} // Modal de comentarios
-                onRequestClose={() => {
-                    setSelectedPost(null); // Cerrar modal al presionar atrás
-                }}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Comentar en {selectedPost?.username}</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Escribe tu comentario aquí"
-                            value={commentText}
-                            onChangeText={setCommentText}
-                            multiline={true}
-                        />
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity onPress={agregarComentario} style={styles.botonAgregar}>
-                                <Text style={styles.botonTexto}>Agregar Comentario</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setSelectedPost(null)} style={styles.botonCancelar}>
-                                <Text style={styles.botonTexto}>Cancelar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-        </SafeAreaView>
-    );
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Comunidad Ecocultivo</Text>
+      </View>
+      <View>
+        <View style={styles.createPostContainer}>
+          <TextInput
+            placeholder="¿Algún tip que quieras compartir hoy?"
+            value={newPostContent}
+            onChangeText={setNewPostContent}
+            style={styles.postInput}
+          />
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.buttonImage} onPress={pickImage}>
+                <Text style={styles.botonTexto}>Seleccionar Imagen</Text>
+                {imageUri && (
+                <>
+                    <Image source={{ uri: imageUri }} style={styles.selectedImage} />
+                    <TouchableOpacity onPress={() => setImageUri(null)} style={styles.cancelButton}>
+                        <Text style={styles.cancelButtonText}>Cancelar</Text>
+                    </TouchableOpacity>
+                </>
+                )}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.buttonPublic} onPress={handleCreatePost}>
+                <Text style={styles.botonTexto}>Publicar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <FlatList
+          data={posts}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+        />
+      </View>
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 16,
-    },
-    header: {
-        marginBottom: 20,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    crearPostButton: {
-        backgroundColor: 'green',
-        padding: 10,
-        borderRadius: 5,
-    },
-    crearPostButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
-    },
-    feed: {
-        paddingBottom: 20,
-    },
-    postContainer: {
-        backgroundColor: '#f9f9f9',
-        padding: 15,
-        marginVertical: 8,
-        borderRadius: 5,
-    },
-    username: {
-        fontWeight: 'bold',
-        marginBottom: 5,
-    },
-    content: {
-        marginBottom: 5,
-    },
-    timestamp: {
-        fontSize: 12,
-        color: 'gray',
-        marginBottom: 10,
-    },
-    commentButton: {
-        backgroundColor: 'green',
-        padding: 10,
-        alignItems: 'center',
-        borderRadius: 5,
-    },
-    commentButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
-    },
-    commentText: {
-        fontSize: 12,
-        color: 'blue',
-        marginTop: 5,
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semi-transparente
-    },
-    modalContent: {
-        width: '80%',
-        backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 20,
-        elevation: 5,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    input: {
-        height: 100,
-        borderColor: 'gray',
-        borderWidth: 1,
-        borderRadius: 5,
-        marginBottom: 15,
-        padding: 10,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    botonAgregar: {
-        backgroundColor: 'green',
-        padding: 10,
-        borderRadius: 5,
-        flex: 1,
-        marginRight: 5,
-    },
-    botonCancelar: {
-        backgroundColor: 'red',
-        padding: 10,
-        borderRadius: 5,
-        flex: 1,
-        marginLeft: 5,
-    },
-    botonTexto: {
-        color: 'white',
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
+  container: {
+    flex: 1, 
+    paddingHorizontal: 20, 
+    paddingTop: 40,
+    backgroundColor: '#f0f8f0',
+  },
+  header: { 
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  title: { 
+    fontSize: 24, 
+    fontWeight: 'bold',
+    color: '#3b6e3a',
+  },
+  createPostContainer: {
+    padding: 10,
+    backgroundColor: '#e9f9e9',
+    borderRadius: 5,
+    elevation: 2,
+    marginBottom: 10,
+  },
+  postInput: {
+    marginBottom: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#aaa',
+    borderRadius: 5,
+    backgroundColor: '#fff',
+  },
+  selectedImage: {
+    width: 100,
+    height: 100,
+    marginBottom: 10,
+  },
+  postContainer: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    backgroundColor: '#fff',
+    marginBottom: 10,
+    borderRadius: 5,
+    elevation: 1,
+  },
+  username: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#3b6e3a',
+  },
+  postImage: {
+    width: '100%',
+    height: 200,
+    marginVertical: 10,
+    borderRadius: 5,
+  },
+  likesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 5,
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  likeCount: {
+    marginLeft: 5,
+    color: '#3b6e3a',
+  },
+  commentInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#aaa',
+    borderRadius: 5,
+    padding: 5,
+    marginRight: 10,
+  },
+  commentContainer: {
+    marginLeft: 20,
+    marginTop: 5,
+  },
+  commentUser: {
+    fontWeight: 'bold',
+    color: '#3b6e3a',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  buttonImage: {
+    backgroundColor: 'green',
+    padding: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginTop: 10,
+    marginLeft: 10,
+    marginRight: 15,
+  },
+  buttonPublic: {
+    backgroundColor: 'green',
+    padding: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: 10, // Espacio entre los botones
+    marginTop: 10,
+    marginRight: 15,
+  },
+  botonTexto: {
+    color: 'white',
+  },
+  cancelButton: {
+    backgroundColor: 'red',
+    padding: 5,
+    borderRadius: 5,
+    marginTop: 5,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  timeAgo: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 5,
+  },
 });
 
-export default Comunidad;
+export default ComunidadScreen;
