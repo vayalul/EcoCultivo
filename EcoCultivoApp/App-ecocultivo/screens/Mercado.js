@@ -1,201 +1,145 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, Button, Modal, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, Image, StyleSheet, Button, Modal, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Asegúrate de tener este paquete instalado
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { db } from '../credenciales';
+import { collection, getDocs } from 'firebase/firestore';
+import { iniciarPago } from '../transbank';
 
-// URL del logo de la app
-const logoApp = require('../assets/Logo.png'); // Asegúrate de usar require para imágenes locales
-
-// Ejemplo de lista de productos
-const initialProductos = [
-  { id: '1', nombre: 'Semillas de tomate', precio: '5.000', imagen: logoApp },
-  { id: '2', nombre: 'Fertilizante', precio: '8.000', imagen: logoApp },
-  { id: '3', nombre: 'Tijeras de podar', precio: '14.000', imagen: logoApp },
-  // Agrega más productos según sea necesario
-];
-
-// Componente para cada producto
-const ProductoItem = ({ producto }) => (
+const ProductoItem = ({ producto, agregarAlCarrito }) => (
   <View style={styles.productoContainer}>
-    <Image source={producto.imagen} style={styles.imagen} />
+    <Image source={{ uri: producto.imagen }} style={styles.imagenCultivo} />
     <Text style={styles.nombre}>{producto.nombre}</Text>
-    <Text style={styles.precio}>${producto.precio}</Text>
+    <Text style={styles.precio}>{producto.precio}</Text>
+    <Button title="Agregar al Carrito" onPress={() => agregarAlCarrito(producto)} />
   </View>
 );
 
-// Componente principal de mercado
 const Mercado = () => {
-  const [productos, setProductos] = useState(initialProductos);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [nombre, setNombre] = useState('');
-  const [precio, setPrecio] = useState('');
-  const [imagen, setImagen] = useState('');
+  const [productos, setProductos] = useState([]);
+  const [carrito, setCarrito] = useState([]);
+  const [carritoVisible, setCarritoVisible] = useState(false);
 
-  const agregarProducto = () => {
-    const nuevoProducto = {
-      id: (productos.length + 1).toString(),
-      nombre,
-      precio,
-      imagen,
+  useEffect(() => {
+    const fetchProductos = async () => {
+      try {
+        const productosSnapshot = await getDocs(collection(db, 'Productos'));
+        const productosList = productosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setProductos(productosList);
+      } catch (error) {
+        console.error("Error al obtener productos:", error);
+      }
     };
-    setProductos([...productos, nuevoProducto]);
-    setNombre('');
-    setPrecio('');
-    setImagen('');
-    setModalVisible(false);
+    fetchProductos();
+  }, []);
+
+  const agregarAlCarrito = (producto) => {
+    setCarrito([...carrito, producto]);
   };
 
-  const seleccionarImagen = () => {
-    // Aquí puedes implementar la lógica para seleccionar una imagen
-    setImagen('../assets/Logo.png'); // Cambia esto por la lógica para seleccionar la imagen
+  const handleComprar = async () => {
+    try {
+      const montoTotal = carrito.reduce((total, producto) => total + parseFloat(producto.precio), 0);
+      const response = await iniciarPago(montoTotal, carrito);
+      console.log("Respuesta del pago:", response);
+    } catch (error) {
+      console.error("Error al procesar el pago:", error);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Mercado</Text>
-        <TouchableOpacity style={styles.cartButton}>
-          <Icon name="shopping-cart" size={25} color="black" />
-        </TouchableOpacity>
-      </View>
+      {productos.length === 0 ? (
+        <Text>No hay productos disponibles</Text>
+      ) : (
+        <FlatList
+          data={productos}
+          renderItem={({ item }) => <ProductoItem producto={item} agregarAlCarrito={agregarAlCarrito} />}
+          keyExtractor={(item) => item.id}
+        />
+      )}
+      <TouchableOpacity onPress={() => setCarritoVisible(true)}>
+        <Text style={styles.carritoButton}>Ver Carrito ({carrito.length})</Text>
+      </TouchableOpacity>
 
-      <FlatList
-        data={productos}
-        renderItem={({ item }) => <ProductoItem producto={item} />}
-        keyExtractor={(item) => item.id}
-      />
-      
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Agregar Producto</Text>
-            <TextInput
-              placeholder="Nombre del Producto"
-              value={nombre}
-              onChangeText={setNombre}
-              style={styles.input}
+      <Modal visible={carritoVisible} animationType="slide" transparent={true}>
+        <View style={styles.carritoContainer}>
+          <Text style={styles.carritoTitulo}>Carrito de Compras</Text>
+          {carrito.length > 0 ? (
+            <FlatList
+              data={carrito}
+              renderItem={({ item }) => (
+                <View style={styles.carritoItem}>
+                  <Text>{item.nombre}</Text>
+                  <Text>{item.precio}</Text>
+                </View>
+              )}
+              keyExtractor={(item, index) => index.toString()}
             />
-            <TextInput
-              placeholder="Precio"
-              value={precio}
-              onChangeText={setPrecio}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-            <TouchableOpacity style={styles.imageButton} onPress={seleccionarImagen}>
-              <Icon name="upload" size={25} color={"white"} />
-              <Text style={styles.imageButtonText}> Subir Imagen</Text>
-            </TouchableOpacity>
-            <View style={styles.buttonContainer}>
-              <Button title="Agregar" onPress={agregarProducto} color={"green"} />
-            </View>
-            <View style={styles.buttonContainer}>
-              <Button title="Cancelar" onPress={() => setModalVisible(false)} color={"red"} />
-            </View>
-          </View>
+          ) : (
+            <Text>Tu carrito está vacío</Text>
+          )}
+          <Button title="Comprar" onPress={handleComprar} />
+          <Button title="Cerrar Carrito" onPress={() => setCarritoVisible(false)} />
         </View>
       </Modal>
-
-      <View style={styles.footer}>
-        <Button title="Agregar Producto" onPress={() => setModalVisible(true)} color={'green'}/>
-      </View>
     </SafeAreaView>
   );
 };
 
-// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  productoContainer: { 
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
     marginBottom: 10,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  cartButton: {
-    padding: 10,
-  },
-  productoContainer: {
-    marginBottom: 20,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  imagen: {
+  imagenCultivo: {
     width: 100,
     height: 100,
+    borderRadius: 10,
     marginBottom: 10,
+    alignSelf: 'center',
   },
   nombre: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   precio: {
-    fontSize: 16,
-    color: '#888',
+    fontSize: 14,
+    color: 'green',
   },
-  modalContainer: {
+  carritoButton: {
+    color: 'white', 
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginVertical: 20,
+    backgroundColor: 'green', 
+    padding: 15, 
+    borderRadius: 10, 
+    alignItems: 'center',
+  },
+  carritoContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
     backgroundColor: 'white',
-    borderRadius: 10,
     padding: 20,
-    alignItems: 'center',
+    marginTop: 'auto',
   },
-  modalTitle: {
+  carritoTitulo: {
     fontSize: 20,
-    marginBottom: 20,
+    fontWeight: 'bold',
   },
-  input: {
-    width: '100%',
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-  },
-  buttonContainer: {
-    marginVertical: 10,
-    width: '100%',
-  },
-  imageButton: {
+  carritoItem: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'gray',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    width: '100%',
-    justifyContent: 'center',
-  },
-  imageButtonText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: 'white',
-  },
-  footer: {
-    justifyContent: 'flex-end',
-    marginBottom: 20, // Espacio desde el fondo
-    alignItems: 'center', // Centrar el botón
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
   },
 });
 
