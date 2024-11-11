@@ -1,201 +1,160 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, Button, Modal, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Asegúrate de tener este paquete instalado
+import { db } from '../credenciales';
+import { collection, getDocs } from 'firebase/firestore';
 
-// URL del logo de la app
-const logoApp = require('../assets/Logo.png'); // Asegúrate de usar require para imágenes locales
+const PAGE_SIZE = 4; // Define cuántos productos se mostrarán por página
 
-// Ejemplo de lista de productos
-const initialProductos = [
-  { id: '1', nombre: 'Semillas de tomate', precio: '5.000', imagen: logoApp },
-  { id: '2', nombre: 'Fertilizante', precio: '8.000', imagen: logoApp },
-  { id: '3', nombre: 'Tijeras de podar', precio: '14.000', imagen: logoApp },
-  // Agrega más productos según sea necesario
-];
-
-// Componente para cada producto
-const ProductoItem = ({ producto }) => (
+const ProductoItem = ({ producto, onComprar }) => (
   <View style={styles.productoContainer}>
-    <Image source={producto.imagen} style={styles.imagen} />
-    <Text style={styles.nombre}>{producto.nombre}</Text>
-    <Text style={styles.precio}>${producto.precio}</Text>
+    <Image source={{ uri: producto.imagen }} style={styles.imagenProducto} />
+    <Text style={styles.nombreProducto} numberOfLines={1} ellipsizeMode="tail">
+      {producto.nombre}
+    </Text>
+    {producto.precio !== undefined && (
+      <Text style={styles.precioProducto}>{`$${producto.precio}`}</Text>
+    )}
+    <TouchableOpacity onPress={() => onComprar(producto)} style={styles.botonComprar}>
+      <Text style={styles.textoBoton}>Comprar</Text>
+    </TouchableOpacity>
   </View>
 );
 
-// Componente principal de mercado
 const Mercado = () => {
-  const [productos, setProductos] = useState(initialProductos);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [nombre, setNombre] = useState('');
-  const [precio, setPrecio] = useState('');
-  const [imagen, setImagen] = useState('');
+  const [productos, setProductos] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const agregarProducto = () => {
-    const nuevoProducto = {
-      id: (productos.length + 1).toString(),
-      nombre,
-      precio,
-      imagen,
+  useEffect(() => {
+    const fetchProductos = async () => {
+      try {
+        const productosSnapshot = await getDocs(collection(db, 'productos'));
+        const productosList = productosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setProductos(productosList);
+      } catch (error) {
+        console.error("Error al obtener productos:", error);
+      }
     };
-    setProductos([...productos, nuevoProducto]);
-    setNombre('');
-    setPrecio('');
-    setImagen('');
-    setModalVisible(false);
+    fetchProductos();
+  }, []);
+
+  const handleComprar = (producto) => {
+    console.log('Comprar producto:', producto.nombre);
   };
 
-  const seleccionarImagen = () => {
-    // Aquí puedes implementar la lógica para seleccionar una imagen
-    setImagen('../assets/Logo.png'); // Cambia esto por la lógica para seleccionar la imagen
-  };
+  // Filtrar productos para la página actual
+  const totalPages = Math.ceil(productos.length / PAGE_SIZE);
+  const paginatedProductos = productos.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Mercado</Text>
-        <TouchableOpacity style={styles.cartButton}>
-          <Icon name="shopping-cart" size={25} color="black" />
-        </TouchableOpacity>
-      </View>
-
+      <Text style={styles.title}>Mercado</Text>
       <FlatList
-        data={productos}
-        renderItem={({ item }) => <ProductoItem producto={item} />}
+        data={paginatedProductos}
+        renderItem={({ item }) => <ProductoItem producto={item} onComprar={handleComprar} />}
         keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={styles.filaProductos}
+        contentContainerStyle={styles.listaProductos}
       />
-      
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Agregar Producto</Text>
-            <TextInput
-              placeholder="Nombre del Producto"
-              value={nombre}
-              onChangeText={setNombre}
-              style={styles.input}
-            />
-            <TextInput
-              placeholder="Precio"
-              value={precio}
-              onChangeText={setPrecio}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-            <TouchableOpacity style={styles.imageButton} onPress={seleccionarImagen}>
-              <Icon name="upload" size={25} color={"white"} />
-              <Text style={styles.imageButtonText}> Subir Imagen</Text>
-            </TouchableOpacity>
-            <View style={styles.buttonContainer}>
-              <Button title="Agregar" onPress={agregarProducto} color={"green"} />
-            </View>
-            <View style={styles.buttonContainer}>
-              <Button title="Cancelar" onPress={() => setModalVisible(false)} color={"red"} />
-            </View>
-          </View>
-        </View>
-      </Modal>
 
-      <View style={styles.footer}>
-        <Button title="Agregar Producto" onPress={() => setModalVisible(true)} color={'green'}/>
+      {/* Paginación */}
+      <View style={styles.paginationContainer}>
+        {Array.from({ length: totalPages }, (_, index) => (
+          <TouchableOpacity
+            key={index + 1}
+            style={[
+              styles.pageButton,
+              currentPage === index + 1 && styles.activePageButton,
+            ]}
+            onPress={() => setCurrentPage(index + 1)}
+          >
+            <Text style={styles.pageButtonText}>{index + 1}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </SafeAreaView>
   );
 };
 
-// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    padding: 0,
+    paddingHorizontal: 10,
+    backgroundColor: '#f0f8f0',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
-  cartButton: {
-    padding: 10,
+  listaProductos: {
+    paddingBottom: 20,
+  },
+  filaProductos: {
+    justifyContent: 'center',
   },
   productoContainer: {
-    marginBottom: 20,
+    alignItems: 'center',
+    margin: 5,
     padding: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    width: 160, 
     borderRadius: 8,
-    alignItems: 'center',
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  imagen: {
-    width: 100,
-    height: 100,
+  imagenProducto: {
+    width: 90,
+    height: 90,
+    borderRadius: 5,
     marginBottom: 10,
   },
-  nombre: {
-    fontSize: 18,
+  nombreProducto: {
+    fontSize: 14,
     fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  precio: {
-    fontSize: 16,
-    color: '#888',
+  precioProducto: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 8,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    marginBottom: 20,
-  },
-  input: {
-    width: '100%',
-    borderColor: '#ccc',
-    borderWidth: 1,
+  botonComprar: {
+    backgroundColor: 'green',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
     borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
   },
-  buttonContainer: {
-    marginVertical: 10,
-    width: '100%',
-  },
-  imageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'gray',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    width: '100%',
-    justifyContent: 'center',
-  },
-  imageButtonText: {
-    marginLeft: 10,
-    fontSize: 16,
+  textoBoton: {
     color: 'white',
+    fontWeight: 'light',
+    fontSize: 16,
+    textAlign: 'center',
   },
-  footer: {
-    justifyContent: 'flex-end',
-    marginBottom: 20, // Espacio desde el fondo
-    alignItems: 'center', // Centrar el botón
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  pageButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginHorizontal: 5,
+    borderRadius: 5,
+    backgroundColor: '#ddd',
+  },
+  activePageButton: {
+    backgroundColor: 'green',
+  },
+  pageButtonText: {
+    color: 'white',
   },
 });
 
