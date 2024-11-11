@@ -88,33 +88,32 @@ const ComunidadScreen = () => {
       };
 
   const handleLike = async (postId) => {
-    try{
-        const postRef = doc(db, 'comunidadd', postId);
-        const post = posts.find((p) => p.id === postId);
-        const userId = auth.currentUser.uid;
-        // Crea una función para obtener el nombre de usuario si aún no lo tienes
-        const userDoc = await getDoc(doc(db, 'usuarios', userId)); // Asegúrate de que el ID del usuario sea el correcto.
-        const username = userDoc.exists() ? userDoc.data().username : null; // Asegúrate de que 'username' sea el campo correcto.
+    try {
+      const postRef = doc(db, 'comunidadd', postId);
+      const post = posts.find((p) => p.id === postId);
+      const userId = auth.currentUser.uid;
+      const username = auth.currentUser.displayName; // Usar displayName o el nombre que uses para el usuario
 
-        if (username) {
-            if (post.likes.some(like => like.username === username)) {
-                await updateDoc(postRef, {
-                    likes: arrayRemove({ username}), // Elimina el objeto de like
-                    likesCount: post.likesCount - 1
-                });
-            } else {
-                await updateDoc(postRef, {
-                    likes: arrayUnion({ username}), // Agrega el objeto de like
-                    likesCount: post.likesCount + 1
-                });
-            }
-        } else {
-            Alert.alert('Error', 'No se encontró el nombre de usuario.');
-        }
-    } catch (error) {
-        console.error('Error al dar like', error);
-        Alert.alert('Error', 'Hubo un error al dar like');
-    }
+      // Verifica si el usuario ya ha dado like
+      const alreadyLiked = post.likes.some(like => like.userId === userId);
+
+      if (alreadyLiked) {
+          // Si ya ha dado like, lo eliminamos
+          await updateDoc(postRef, {
+              likes: arrayRemove({ userId, username }), // Elimina el like del usuario
+              likesCount: post.likesCount - 1
+          });
+      } else {
+          // Si no ha dado like, lo agregamos
+          await updateDoc(postRef, {
+              likes: arrayUnion({ userId, username }), // Agrega el like del usuario
+              likesCount: post.likesCount + 1
+          });
+      }
+  } catch (error) {
+      console.error('Error al dar like', error);
+      Alert.alert('Error', 'Hubo un error al dar like');
+  }
   };
 
   const handleAddComment = async (postId) => {
@@ -169,6 +168,7 @@ const ComunidadScreen = () => {
     if (!result.canceled) setImageUri(result.uri);
   };
 
+  
   const renderItem = ({ item }) => (
     
     <View style={styles.postContainer}>
@@ -217,7 +217,7 @@ const ComunidadScreen = () => {
         <Text style={styles.title}>Comunidad Ecocultivo</Text>
       </View>
       <View>
-        <View style={styles.createPostContainer}>
+      <View style={styles.createPostContainer}>
           <TextInput
             placeholder="¿Algún tip que quieras compartir hoy?"
             value={newPostContent}
@@ -226,100 +226,107 @@ const ComunidadScreen = () => {
           />
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.buttonImage} onPress={pickImage}>
-                <Text style={styles.botonTexto}>Seleccionar Imagen</Text>
-                {imageUri && (
-                <>
-                    <Image source={{ uri: imageUri }} style={styles.selectedImage} />
-                    <TouchableOpacity onPress={() => setImageUri(null)} style={styles.cancelButton}>
-                        <Text style={styles.cancelButtonText}>Cancelar</Text>
-                    </TouchableOpacity>
-                </>
-                )}
+              <Ionicons name="camera" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.buttonPublic} onPress={handleCreatePost}>
-                <Text style={styles.botonTexto}>Publicar</Text>
+            <TouchableOpacity style={styles.button} onPress={handleCreatePost}>
+              <Text style={styles.buttonText}>Crear Post</Text>
             </TouchableOpacity>
           </View>
         </View>
+      </View>
+
         <FlatList
           data={posts}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
         />
-      </View>
+
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, 
-    paddingHorizontal: 20, 
-    paddingTop: 40,
-    backgroundColor: '#f0f8f0',
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  header: { 
-    marginBottom: 20,
+  scrollContainer: {
+    flex: 1,
+  },
+  header: {
     alignItems: 'center',
+    marginVertical: 20,
+    paddingTop: 15,
   },
-  title: { 
-    fontSize: 24, 
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#3b6e3a',
   },
   createPostContainer: {
-    padding: 10,
-    backgroundColor: '#e9f9e9',
-    borderRadius: 5,
-    elevation: 2,
-    marginBottom: 10,
+    paddingHorizontal: 15,
+    marginBottom: 20,
   },
   postInput: {
-    marginBottom: 10,
-    padding: 10,
+    height: 40,
+    borderColor: '#ccc',
     borderWidth: 1,
-    borderColor: '#aaa',
     borderRadius: 5,
-    backgroundColor: '#fff',
-  },
-  selectedImage: {
-    width: 100,
-    height: 100,
+    paddingHorizontal: 10,
     marginBottom: 10,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  button: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  buttonImage: {
+    backgroundColor: '#3b5998',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
   },
   postContainer: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    marginVertical: 10,
+    padding: 15,
     backgroundColor: '#fff',
-    marginBottom: 10,
     borderRadius: 5,
-    elevation: 1,
+    elevation: 2,
   },
   username: {
     fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#3b6e3a',
+  },
+  timeAgo: {
+    fontSize: 12,
+    color: '#888',
   },
   postImage: {
     width: '100%',
     height: 200,
+    resizeMode: 'cover',
     marginVertical: 10,
-    borderRadius: 5,
   },
   likesContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 5,
+    marginVertical: 10,
   },
   likeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 20,
   },
   likeCount: {
     marginLeft: 5,
-    color: '#3b6e3a',
+    fontSize: 16,
   },
   commentInputContainer: {
     flexDirection: 'row',
@@ -328,61 +335,18 @@ const styles = StyleSheet.create({
   },
   commentInput: {
     flex: 1,
+    height: 40,
+    borderColor: '#ccc',
     borderWidth: 1,
-    borderColor: '#aaa',
     borderRadius: 5,
-    padding: 5,
-    marginRight: 10,
+    paddingHorizontal: 10,
   },
   commentContainer: {
-    marginLeft: 20,
-    marginTop: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
   },
   commentUser: {
     fontWeight: 'bold',
-    color: '#3b6e3a',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  buttonImage: {
-    backgroundColor: 'green',
-    padding: 10,
-    borderRadius: 20,
-    alignItems: 'center',
-    marginTop: 10,
-    marginLeft: 10,
-    marginRight: 15,
-  },
-  buttonPublic: {
-    backgroundColor: 'green',
-    padding: 10,
-    borderRadius: 20,
-    alignItems: 'center',
-    flex: 1,
-    marginLeft: 10, // Espacio entre los botones
-    marginTop: 10,
-    marginRight: 15,
-  },
-  botonTexto: {
-    color: 'white',
-  },
-  cancelButton: {
-    backgroundColor: 'red',
-    padding: 5,
-    borderRadius: 5,
-    marginTop: 5,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  timeAgo: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 5,
   },
 });
 
