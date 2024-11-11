@@ -1,29 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, Button, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import { db } from '../credenciales';
 import { collection, getDocs } from 'firebase/firestore';
-import { iniciarPago } from '../transbank';
 
-const ProductoItem = ({ producto, agregarAlCarrito }) => (
+const ProductoItem = ({ producto, onComprar }) => (
   <View style={styles.productoContainer}>
-    <Image source={{ uri: producto.imagen }} style={styles.imagenCultivo} />
-    <Text style={styles.nombre}>{producto.nombre}</Text>
-    <Text style={styles.precio}>{producto.precio}</Text>
-    <Button title="Agregar al Carrito" onPress={() => agregarAlCarrito(producto)} />
+    <Image source={{ uri: producto.imagen }} style={styles.imagenProducto} />
+    <Text style={styles.nombreProducto} numberOfLines={1} ellipsizeMode="tail">
+      {producto.nombre}
+    </Text>
+    {producto.precio !== undefined && (
+      <Text style={styles.precioProducto}>{`$${producto.precio}`}</Text>
+    )}
+    <TouchableOpacity onPress={() => onComprar(producto)} style={styles.botonComprar}>
+      <Text style={styles.textoBoton}>Comprar</Text>
+    </TouchableOpacity>
   </View>
 );
 
 const Mercado = () => {
   const [productos, setProductos] = useState([]);
-  const [carrito, setCarrito] = useState([]);
-  const [carritoVisible, setCarritoVisible] = useState(false);
 
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const productosSnapshot = await getDocs(collection(db, 'Productos'));
+        const productosSnapshot = await getDocs(collection(db, 'productos'));
         const productosList = productosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setProductos(productosList);
       } catch (error) {
@@ -33,56 +35,21 @@ const Mercado = () => {
     fetchProductos();
   }, []);
 
-  const agregarAlCarrito = (producto) => {
-    setCarrito([...carrito, producto]);
-  };
-
-  const handleComprar = async () => {
-    try {
-      const montoTotal = carrito.reduce((total, producto) => total + parseFloat(producto.precio), 0);
-      const response = await iniciarPago(montoTotal, carrito);
-      console.log("Respuesta del pago:", response);
-    } catch (error) {
-      console.error("Error al procesar el pago:", error);
-    }
+  const handleComprar = (producto) => {
+    console.log('Comprar producto:', producto.nombre);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {productos.length === 0 ? (
-        <Text>No hay productos disponibles</Text>
-      ) : (
-        <FlatList
-          data={productos}
-          renderItem={({ item }) => <ProductoItem producto={item} agregarAlCarrito={agregarAlCarrito} />}
-          keyExtractor={(item) => item.id}
-        />
-      )}
-      <TouchableOpacity onPress={() => setCarritoVisible(true)}>
-        <Text style={styles.carritoButton}>Ver Carrito ({carrito.length})</Text>
-      </TouchableOpacity>
-
-      <Modal visible={carritoVisible} animationType="slide" transparent={true}>
-        <View style={styles.carritoContainer}>
-          <Text style={styles.carritoTitulo}>Carrito de Compras</Text>
-          {carrito.length > 0 ? (
-            <FlatList
-              data={carrito}
-              renderItem={({ item }) => (
-                <View style={styles.carritoItem}>
-                  <Text>{item.nombre}</Text>
-                  <Text>{item.precio}</Text>
-                </View>
-              )}
-              keyExtractor={(item, index) => index.toString()}
-            />
-          ) : (
-            <Text>Tu carrito está vacío</Text>
-          )}
-          <Button title="Comprar" onPress={handleComprar} />
-          <Button title="Cerrar Carrito" onPress={() => setCarritoVisible(false)} />
-        </View>
-      </Modal>
+      <Text style={styles.title}>Mercado</Text>
+      <FlatList
+        data={productos}
+        renderItem={({ item }) => <ProductoItem producto={item} onComprar={handleComprar} />}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={styles.filaProductos}
+        contentContainerStyle={styles.listaProductos}
+      />
     </SafeAreaView>
   );
 };
@@ -90,56 +57,62 @@ const Mercado = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    padding: 0,
+    paddingHorizontal: 10,
+    backgroundColor: '#f0f8f0',
   },
-  productoContainer: { 
-    padding: 15,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  imagenCultivo: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-    marginBottom: 10,
-    alignSelf: 'center',
-  },
-  nombre: {
-    fontSize: 16,
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
-  precio: {
-    fontSize: 14,
-    color: 'green',
+  listaProductos: {
+    paddingBottom: 20,
   },
-  carritoButton: {
-    color: 'white', 
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginVertical: 20,
-    backgroundColor: 'green', 
-    padding: 15, 
-    borderRadius: 10, 
+  filaProductos: {
+    justifyContent: 'center',
+  },
+  productoContainer: {
     alignItems: 'center',
+    margin: 5,
+    padding: 10,
+    width: 160, 
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  carritoContainer: {
-    flex: 1,
-    backgroundColor: 'white',
-    padding: 20,
-    marginTop: 'auto',
+  imagenProducto: {
+    width: 90,
+    height: 90,
+    borderRadius: 5,
+    marginBottom: 10,
   },
-  carritoTitulo: {
-    fontSize: 20,
+  nombreProducto: {
+    fontSize: 14,
     fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  carritoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
+  precioProducto: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 8,
+  },
+  botonComprar: {
+    backgroundColor: 'green',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  textoBoton: {
+    color: 'white',
+    fontWeight: 'light',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
 
