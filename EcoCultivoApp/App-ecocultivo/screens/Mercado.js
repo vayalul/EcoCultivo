@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { db } from '../credenciales';
 import { collection, getDocs } from 'firebase/firestore';
 
+const PAGE_SIZE = 4; // Define cuántos productos se mostrarán por página
+
 const ProductoItem = ({ producto, onComprar }) => (
   <View style={styles.productoContainer}>
     <Image source={{ uri: producto.imagen }} style={styles.imagenProducto} />
@@ -21,6 +23,7 @@ const ProductoItem = ({ producto, onComprar }) => (
 
 const Mercado = () => {
   const [productos, setProductos] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -39,17 +42,37 @@ const Mercado = () => {
     console.log('Comprar producto:', producto.nombre);
   };
 
+  // Filtrar productos para la página actual
+  const totalPages = Math.ceil(productos.length / PAGE_SIZE);
+  const paginatedProductos = productos.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Mercado</Text>
       <FlatList
-        data={productos}
+        data={paginatedProductos}
         renderItem={({ item }) => <ProductoItem producto={item} onComprar={handleComprar} />}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.filaProductos}
         contentContainerStyle={styles.listaProductos}
       />
+
+      {/* Paginación */}
+      <View style={styles.paginationContainer}>
+        {Array.from({ length: totalPages }, (_, index) => (
+          <TouchableOpacity
+            key={index + 1}
+            style={[
+              styles.pageButton,
+              currentPage === index + 1 && styles.activePageButton,
+            ]}
+            onPress={() => setCurrentPage(index + 1)}
+          >
+            <Text style={styles.pageButtonText}>{index + 1}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </SafeAreaView>
   );
 };
@@ -113,6 +136,25 @@ const styles = StyleSheet.create({
     fontWeight: 'light',
     fontSize: 16,
     textAlign: 'center',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  pageButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginHorizontal: 5,
+    borderRadius: 5,
+    backgroundColor: '#ddd',
+  },
+  activePageButton: {
+    backgroundColor: 'green',
+  },
+  pageButtonText: {
+    color: 'white',
   },
 });
 
