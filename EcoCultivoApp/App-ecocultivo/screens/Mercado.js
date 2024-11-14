@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Modal, Button, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { db } from '../credenciales';
 import { collection, getDocs } from 'firebase/firestore';
 
-const PAGE_SIZE = 4; // Define cuántos productos se mostrarán por página
+const PAGE_SIZE = 6; // Define cuántos productos se mostrarán por página
 
 const ProductoItem = ({ producto, onComprar }) => (
   <View style={styles.productoContainer}>
@@ -24,7 +24,9 @@ const ProductoItem = ({ producto, onComprar }) => (
 const Mercado = () => {
   const [productos, setProductos] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [productosCarrito, setProductosCarrito] = useState([]);
+  
   useEffect(() => {
     const fetchProductos = async () => {
       try {
@@ -39,12 +41,24 @@ const Mercado = () => {
   }, []);
 
   const handleComprar = (producto) => {
-    console.log('Comprar producto:', producto.nombre);
+    setProductosCarrito((prev) => [...prev, producto]); // Añade el producto al carrito
+    setIsModalVisible(true); // Abre el modal del carrito
   };
 
   // Filtrar productos para la página actual
   const totalPages = Math.ceil(productos.length / PAGE_SIZE);
   const paginatedProductos = productos.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const handleCerrarCarrito = () => {
+    setIsModalVisible(false); // Cierra el modal del carrito
+  };
+
+  const handleComprarFinal = () => {
+    // Aquí puedes agregar la lógica para procesar la compra
+    alert("Compra procesada con éxito!");
+    setIsModalVisible(false);
+    setProductosCarrito([]); // Vacía el carrito después de la compra
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,16 +77,48 @@ const Mercado = () => {
         {Array.from({ length: totalPages }, (_, index) => (
           <TouchableOpacity
             key={index + 1}
-            style={[
-              styles.pageButton,
-              currentPage === index + 1 && styles.activePageButton,
-            ]}
+            style={[styles.pageButton, currentPage === index + 1 && styles.activePageButton]}
             onPress={() => setCurrentPage(index + 1)}
           >
             <Text style={styles.pageButtonText}>{index + 1}</Text>
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Modal de carrito (Desliza desde el lado derecho) */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={handleCerrarCarrito}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Carrito de Compras</Text>
+            <ScrollView style={styles.scrollContainer}>
+              {productosCarrito.length > 0 ? (
+                productosCarrito.map((producto, index) => (
+                  <View key={index} style={styles.productoEnCarrito}>
+                    <Image source={{ uri: producto.imagen }} style={styles.imagenProductoCarrito} />
+                    <View style={styles.infoProducto}>
+                      <Text>{producto.nombre}</Text>
+                      <Text>{`$${producto.precio}`}</Text>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <Text>No hay productos en el carrito.</Text>
+              )}
+            </ScrollView>
+            <View style={styles.modalButtons}>
+              <Button title="Cerrar carrito" onPress={handleCerrarCarrito} />
+              <TouchableOpacity style={styles.botonComprarFinal} onPress={handleComprarFinal}>
+                <Text style={styles.textoBotonFinal}>Comprar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -87,7 +133,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginTop: 10,
+    marginBottom: 20,
     textAlign: 'center',
   },
   listaProductos: {
@@ -141,7 +188,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 10,
-    marginBottom: 10,
   },
   pageButton: {
     paddingHorizontal: 10,
@@ -155,6 +201,63 @@ const styles = StyleSheet.create({
   },
   pageButtonText: {
     color: 'white',
+  },
+  // Estilos para Modal del carrito de compras
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    width: '60%', // Espacio que ocupa el carrito, ajustable a nuestro gusto
+    height: '100%', // Ocupa toda la altura de la pantalla
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    padding: 20,
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+  },
+  modalTitle: {
+    paddingTop: 40,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  productoEnCarrito: {
+    paddingTop: 10,
+    flexDirection: 'row',
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  imagenProductoCarrito: {
+    width: 60,
+    height: 60,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  infoProducto: {
+    flex: 1,
+  },
+  modalButtons: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  botonComprarFinal: {
+    backgroundColor: 'green',
+    paddingVertical: 10,
+    paddingHorizontal: 40,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  textoBotonFinal: {
+    color: 'white',
+    fontSize: 18,
   },
 });
 
