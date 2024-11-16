@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { db } from '../credenciales';
 import { collection, getDocs } from 'firebase/firestore';
 
-const PAGE_SIZE = 6; // Define cuántos productos se mostrarán por página
+const PAGE_SIZE = 6;
 
 const ProductoItem = ({ producto, onComprar }) => (
   <View style={styles.productoContainer}>
@@ -54,10 +54,10 @@ const Mercado = () => {
   };
 
   const handleComprarFinal = () => {
-    // Aquí puedes agregar la lógica para procesar la compra
+    // Luego agregamos la lógica para procesar la compra
     alert("Compra procesada con éxito!");
     setIsModalVisible(false);
-    setProductosCarrito([]); // Vacía el carrito después de la compra
+    setProductosCarrito([]); // Se vacía el carrito después de la compra
   };
 
   return (
