@@ -14,7 +14,7 @@ const ProductoItem = ({ producto, onComprar }) => (
       {producto.nombre}
     </Text>
     {producto.precio !== undefined && (
-      <Text style={styles.precioProducto}>{$${producto.precio}}</Text>
+      <Text style={styles.precioProducto}>{`$${producto.precio}`}</Text>
     )}
     <TouchableOpacity onPress={() => onComprar(producto)} style={styles.botonComprar}>
       <Text style={styles.textoBoton}>Añadir</Text>
@@ -45,12 +45,10 @@ const Mercado = () => {
     setProductosCarrito((prev) => {
       const index = prev.findIndex((p) => p.id === producto.id);
       if (index !== -1) {
-        // Si el producto ya está en el carrito, incrementamos la cantidad
         const updatedCarrito = [...prev];
         updatedCarrito[index].cantidad += 1;
         return updatedCarrito;
       } else {
-        // Si el producto no está en el carrito, lo agregamos con cantidad 1
         return [...prev, { ...producto, cantidad: 1 }];
       }
     });
@@ -96,17 +94,13 @@ const Mercado = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Contenedor para centrar titulo y abrir ícono del carrito */}
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Mercado</Text>
         <TouchableOpacity style={styles.botonCarrito} onPress={() => setIsModalVisible(true)}>
-          <Text> {/* Envolvemos el icono dentro de un Text si es necesario */}
-            <Icon name="shopping-cart" size={30} color="white" />
-          </Text>
+          <Icon name="shopping-cart" size={30} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Lista de productos */}
       <FlatList
         data={paginatedProductos}
         renderItem={({ item }) => <ProductoItem producto={item} onComprar={handleComprar} />}
@@ -128,48 +122,42 @@ const Mercado = () => {
         ))}
       </View>
 
-      {/* Modal de carrito */}
       <Modal visible={isModalVisible} animationType="slide" transparent={true} onRequestClose={handleCerrarCarrito}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Carrito de Compras</Text>
             <ScrollView style={styles.scrollContainer}>
-            {productosCarrito.length > 0 ? (
-              productosCarrito.map((producto) => (
-                <View key={producto.id} style={styles.productoEnCarrito}>
-                  <Image source={{ uri: producto.imagen }} style={styles.imagenProductoCarrito} />
-                  <View style={styles.infoProducto}>
-                    <Text>{producto.nombre}</Text>
-                    <Text>{$${producto.precio}}</Text>
-                    
-                    {/* Botón Eliminar */}
-                    <TouchableOpacity onPress={() => handleEliminar(producto.id)} style={styles.botonEliminar}>
-                      <Text style={styles.textoBotonEliminar}>Eliminar</Text>
-                    </TouchableOpacity>
-                    
-                    {/* Contador de cantidad */}
-                    <View style={styles.contadorContainer}>
-                      <TouchableOpacity
-                        onPress={() => handleDecrementar(producto.id)}
-                        style={styles.botonContador}
-                      >
-                        <Text style={styles.textoContador}>-</Text>
+              {productosCarrito.length > 0 ? (
+                productosCarrito.map((producto) => (
+                  <View key={producto.id} style={styles.productoEnCarrito}>
+                    <Image source={{ uri: producto.imagen }} style={styles.imagenProductoCarrito} />
+                    <View style={styles.infoProducto}>
+                      <Text>{producto.nombre}</Text>
+                      <Text>{`$${producto.precio}`}</Text>
+                      <TouchableOpacity onPress={() => handleEliminar(producto.id)} style={styles.botonEliminar}>
+                        <Text style={styles.textoBotonEliminar}>Eliminar</Text>
                       </TouchableOpacity>
-                      <Text style={styles.cantidadTexto}>{producto.cantidad}</Text>
-                      <TouchableOpacity
-                        onPress={() => handleIncrementar(producto.id)}
-                        style={styles.botonContador}
-                      >
-                        <Text style={styles.textoContador}>+</Text>
-                      </TouchableOpacity>
+                      <View style={styles.contadorContainer}>
+                        <TouchableOpacity
+                          onPress={() => handleDecrementar(producto.id)}
+                          style={styles.botonContador}
+                        >
+                          <Text style={styles.textoContador}>-</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.cantidadTexto}>{producto.cantidad}</Text>
+                        <TouchableOpacity
+                          onPress={() => handleIncrementar(producto.id)}
+                          style={styles.botonContador}
+                        >
+                          <Text style={styles.textoContador}>+</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
-                </View>
-              ))
-            ) : (
-              <Text>No hay productos en el carrito.</Text>
-            )}
-
+                ))
+              ) : (
+                <Text>No hay productos en el carrito.</Text>
+              )}
             </ScrollView>
             <View style={styles.modalButtons}>
               <Button title="Cerrar carrito" onPress={handleCerrarCarrito} />
