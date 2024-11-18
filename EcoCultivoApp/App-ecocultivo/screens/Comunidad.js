@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, FlatList, Image, TouchableOpacity, StyleSheet, Alert, Modal, Button } from 'react-native';
 import { db, auth, storage } from '../credenciales';
-import { collection, addDoc, updateDoc, doc, arrayUnion, arrayRemove, onSnapshot, getDoc, } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, arrayUnion, arrayRemove, onSnapshot, deleteDoc, getDoc } from 'firebase/firestore';
 import { uploadBytes, getDownloadURL, ref } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,13 +11,14 @@ const ComunidadScreen = () => {
   const [posts, setPosts] = useState([]);
   const [newPostContent, setNewPostContent] = useState('');
   const [imageUri, setImageUri] = useState(null);
-  const [newComment, setNewComment] = useState(''); // Estado para el nuevo comentario
-  const [currentPostId, setCurrentPostId] = useState(null); // Estado para el ID del post actual
+  const [modalVisible, setModalVisible] = useState(false); // Modal para editar
+  const [newComment, setNewComment] = useState(''); // Nuevo comentario
+  const [currentPostId, setCurrentPostId] = useState(null); // ID del post actual
+  const [editPostContent, setEditPostContent] = useState(''); // Contenido editado
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'comunidadd'), (snapshot) => {
-      const postsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-
+      const postsData = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
       setPosts(postsData);
     });
     return unsubscribe;
@@ -26,7 +27,6 @@ const ComunidadScreen = () => {
   const uploadImage = async (uri) => {
     const response = await fetch(uri);
     const blob = await response.blob();
-  
     const storageRef = ref(storage, `comunidadd/${auth.currentUser.uid}/${Date.now()}`);
     await uploadBytes(storageRef, blob);
     return await getDownloadURL(storageRef);
@@ -34,126 +34,147 @@ const ComunidadScreen = () => {
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim()) {
-        Alert.alert('Error', 'El contenido del post no puede estar vacío.');
-        return;
+      Alert.alert('Error', 'El contenido del post no puede estar vacío.');
+      return;
     }
 
     const postsRef = collection(db, 'comunidadd');
 
     try {
-        // Obtener el documento del usuario para obtener el username
-        const userDoc = await getDoc(doc(db, 'usuarios', auth.currentUser.uid));
-        const username = userDoc.exists() ? userDoc.data().username : 'Usuario Desconocido'; // Usa un valor por defecto si no existe
+      const userDoc = await getDoc(doc(db, 'usuarios', auth.currentUser.uid));
+      const username = userDoc.exists() ? userDoc.data().username : 'Usuario Desconocido';
 
-        const newPostRef = await addDoc(postsRef, {
-            contenido: newPostContent,
-            fecha: new Date(),
-            userId: auth.currentUser.uid,
-            userName: username,
-            comentarios: [],
-            likes: [], // Inicializar likes como array vacío
-            likesCount: 0 // Inicializar likesCount en 0
-        });
+      const newPostRef = await addDoc(postsRef, {
+        contenido: newPostContent,
+        fecha: new Date(),
+        userId: auth.currentUser.uid,
+        userName: username,
+        comentarios: [],
+        likes: [],
+        likesCount: 0,
+      });
 
-        if (imageUri) {
-            const imageUrl = await uploadImage(imageUri);
-            await updateDoc(newPostRef, { imageurl: imageUrl });
-        }
+      if (imageUri) {
+        const imageUrl = await uploadImage(imageUri);
+        await updateDoc(newPostRef, { imageurl: imageUrl });
+      }
 
-        console.log('Post creado con ID:', newPostRef.id);
-        setNewPostContent(''); // Limpiar el campo de texto del post
+      setNewPostContent('');
     } catch (error) {
-        console.error('Error al crear el post', error);
-        Alert.alert('Error', 'Hubo un error al crear el post');
+      Alert.alert('Error', 'Hubo un error al crear el post');
     }
-    };
+  };
 
-    const timeAgo = (date) => {
-        if (!date) return 'Fecha desconocida'; // Manejar el caso de fecha no definida
-        const now = new Date();
-        const seconds = Math.floor((now - date.toDate()) / 1000);
-        let interval = Math.floor(seconds / 31536000);
-        
-        if (interval >= 1) return `${interval} año${interval === 1 ? '' : 's'} atrás`;
-        interval = Math.floor(seconds / 2592000);
-        if (interval >= 1) return `${interval} mes${interval === 1 ? '' : 'es'} atrás`;
-        interval = Math.floor(seconds / 86400);
-        if (interval >= 1) return `${interval} día${interval === 1 ? '' : 's'} atrás`;
-        interval = Math.floor(seconds / 3600);
-        if (interval >= 1) return `${interval} hora${interval === 1 ? '' : 's'} atrás`;
-        interval = Math.floor(seconds / 60);
-        if (interval >= 1) return `${interval} minuto${interval === 1 ? '' : 's'} atrás`;
-        
-        return 'Ahora mismo';
-      };
+  const handleEditPost = async () => {
+    if (!editPostContent.trim()) {
+      Alert.alert('Error', 'El contenido del post no puede estar vacío.');
+      return;
+    }
+    try {
+      const postRef = doc(db, 'comunidadd', currentPostId);
+      await updateDoc(postRef, { contenido: editPostContent });
+      Alert.alert('Éxito', 'Post editado correctamente');
+      setModalVisible(false);
+      setEditPostContent('');
+      setCurrentPostId(null);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo editar el post');
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    Alert.alert(
+      'Confirmar Eliminación',
+      '¿Estás seguro de que deseas eliminar este post?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'comunidadd', postId));
+              Alert.alert('Éxito', 'Post eliminado correctamente');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo eliminar el post');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const timeAgo = (date) => {
+    if (!date) return 'Fecha desconocida';
+    const now = new Date();
+    const seconds = Math.floor((now - date.toDate()) / 1000);
+    let interval = Math.floor(seconds / 31536000);
+    if (interval >= 1) return `${interval} año${interval === 1 ? '' : 's'} atrás`;
+    interval = Math.floor(seconds / 2592000);
+    if (interval >= 1) return `${interval} mes${interval === 1 ? '' : 'es'} atrás`;
+    interval = Math.floor(seconds / 86400);
+    if (interval >= 1) return `${interval} día${interval === 1 ? '' : 's'} atrás`;
+    interval = Math.floor(seconds / 3600);
+    if (interval >= 1) return `${interval} hora${interval === 1 ? '' : 's'} atrás`;
+    interval = Math.floor(seconds / 60);
+    if (interval >= 1) return `${interval} minuto${interval === 1 ? '' : 's'} atrás`;
+    return 'Ahora mismo';
+  };
 
   const handleLike = async (postId) => {
     try {
       const postRef = doc(db, 'comunidadd', postId);
       const post = posts.find((p) => p.id === postId);
       const userId = auth.currentUser.uid;
-      const username = auth.currentUser.displayName; // Usar displayName o el nombre que uses para el usuario
 
-      // Verifica si el usuario ya ha dado like
-      const alreadyLiked = post.likes.some(like => like.userId === userId);
+      const alreadyLiked = post.likes.some((like) => like.userId === userId);
 
       if (alreadyLiked) {
-          // Si ya ha dado like, lo eliminamos
-          await updateDoc(postRef, {
-              likes: arrayRemove({ userId, username }), // Elimina el like del usuario
-              likesCount: post.likesCount - 1
-          });
+        await updateDoc(postRef, {
+          likes: arrayRemove({ userId }),
+          likesCount: post.likesCount - 1,
+        });
       } else {
-          // Si no ha dado like, lo agregamos
-          await updateDoc(postRef, {
-              likes: arrayUnion({ userId, username }), // Agrega el like del usuario
-              likesCount: post.likesCount + 1
-          });
+        await updateDoc(postRef, {
+          likes: arrayUnion({ userId }),
+          likesCount: post.likesCount + 1,
+        });
       }
-  } catch (error) {
-      console.error('Error al dar like', error);
+    } catch (error) {
       Alert.alert('Error', 'Hubo un error al dar like');
-  }
+    }
   };
 
   const handleAddComment = async (postId) => {
-    // Obtener el documento del usuario
-    const userDoc = await getDoc(doc(db, 'usuarios', auth.currentUser.uid));
-    const username = userDoc.exists() ? userDoc.data().username : 'Usuario Desconocido'; // Nombre de usuario por defecto
-
-    // Verificar que el nuevo comentario no esté vacío
     if (!newComment.trim()) {
-        Alert.alert('Error', 'El comentario no puede estar vacío.');
-        return; // Salir si el comentario está vacío
+      Alert.alert('Error', 'El comentario no puede estar vacío.');
+      return;
     }
 
     try {
-        const postRef = doc(db, 'comunidadd', postId);
+      const userDoc = await getDoc(doc(db, 'usuarios', auth.currentUser.uid));
+      const username = userDoc.exists() ? userDoc.data().username : 'Usuario Desconocido';
 
-        // Agregar el comentario a Firestore
-        await updateDoc(postRef, {
-            comentarios: arrayUnion({
-                comentario: newComment,
-                fecha: new Date(),
-                userId: auth.currentUser.uid,
-                username: username // Usa el nombre de usuario obtenido
-            })
-        });
+      const postRef = doc(db, 'comunidadd', postId);
+      await updateDoc(postRef, {
+        comentarios: arrayUnion({
+          comentario: newComment,
+          fecha: new Date(),
+          userId: auth.currentUser.uid,
+          username,
+        }),
+      });
 
-        setNewComment(''); // Limpiar el campo de texto del comentario
-        setCurrentPostId(null); // Restablecer el ID del post actual
+      setNewComment('');
+      setCurrentPostId(null);
     } catch (error) {
-        console.error('Error al agregar comentario', error);
-        Alert.alert('Error', 'Hubo un error al agregar comentario');
+      Alert.alert('Error', 'Hubo un error al agregar el comentario');
     }
-};
+  };
 
   const handleCommentToggle = (postId) => {
     if (currentPostId === postId) {
-      // Si el post actual es el mismo, ocultar el input
       setCurrentPostId(null);
     } else {
-      // Mostrar el input del nuevo post
       setCurrentPostId(postId);
     }
   };
@@ -168,79 +189,103 @@ const ComunidadScreen = () => {
     if (!result.canceled) setImageUri(result.uri);
   };
 
-  
-  const renderItem = ({ item }) => (
-    
-    <View style={styles.postContainer}>
-    <Text style={styles.username}>{item.userName}</Text>
-    <Text>{item.contenido}</Text>
-    <Text style={styles.timeAgo}>{timeAgo(item.fecha)}</Text>
-    {item.imageurl && <Image source={{ uri: item.imageurl }} style={styles.postImage} />}
-    <View style={styles.likesContainer}>
-      <TouchableOpacity onPress={() => handleLike(item.id)} style={styles.likeButton}>
-        <Ionicons name={item.likes.some(like => like.username === auth.currentUser.displayName) ? "heart" : "heart-outline"} size={24} color="red" />
-        <Text style={styles.likeCount}>{item.likesCount}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => handleCommentToggle(item.id)}>
-        <Ionicons name="chatbubble-outline" size={24} color="green" />
-      </TouchableOpacity>
-    </View>
-    {currentPostId === item.id && (
-      <View style={styles.commentInputContainer}>
-        <TextInput
-          placeholder="Escribe tu comentario..."
-          value={newComment}
-          onChangeText={setNewComment}
-          style={styles.commentInput}
-        />
-        <TouchableOpacity onPress={() => handleAddComment(item.id)}>
-          <Ionicons name="paper-plane" size={24} color="green" />
-        </TouchableOpacity>
-      </View>
-    )}
-    <FlatList
-      data={item.comentarios}
-      renderItem={({ item: comment }) => (
-        <View style={styles.commentContainer}>
-          <Text style={styles.commentUser}>{comment.username}</Text>
-          <Text>{comment.comentario}</Text>
+  const renderItem = ({ item }) => {
+    const isPostOwner = item.userId === auth.currentUser.uid;
+
+    return (
+      <View style={styles.postContainer}>
+        <Text style={styles.username}>{item.userName}</Text>
+        <Text>{item.contenido}</Text>
+        <Text style={styles.timeAgo}>{timeAgo(item.fecha)}</Text>
+        {item.imageurl && <Image source={{ uri: item.imageurl }} style={styles.postImage} />}
+        <View style={styles.likesContainer}>
+          <TouchableOpacity onPress={() => handleLike(item.id)} style={styles.likeButton}>
+            <Ionicons
+              name={item.likes.some((like) => like.userId === auth.currentUser.uid) ? 'heart' : 'heart-outline'}
+              size={24}
+              color="red"
+            />
+            <Text style={styles.likeCount}>{item.likesCount}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleCommentToggle(item.id)}>
+            <Ionicons name="chatbubble-outline" size={24} color="green" />
+          </TouchableOpacity>
         </View>
-      )}
-      keyExtractor={(comment, index) => index.toString()}
-    />
-  </View>
-  );
+        {isPostOwner && (
+          <View style={styles.postActions}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => {
+                setEditPostContent(item.contenido);
+                setCurrentPostId(item.id);
+                setModalVisible(true);
+              }}
+            >
+              <Ionicons name="create-outline" size={24} color="blue" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeletePost(item.id)}>
+              <Ionicons name="trash-outline" size={24} color="red" />
+            </TouchableOpacity>
+          </View>
+        )}
+        {currentPostId === item.id && (
+          <View style={styles.commentInputContainer}>
+            <TextInput
+              placeholder="Escribe tu comentario..."
+              value={newComment}
+              onChangeText={setNewComment}
+              style={styles.commentInput}
+            />
+            <TouchableOpacity onPress={() => handleAddComment(item.id)}>
+              <Ionicons name="paper-plane" size={24} color="green" />
+            </TouchableOpacity>
+          </View>
+        )}
+        <FlatList
+          data={item.comentarios}
+          renderItem={({ item: comment }) => (
+            <View style={styles.commentContainer}>
+              <Text style={styles.commentUser}>{comment.username}</Text>
+              <Text>{comment.comentario}</Text>
+            </View>
+          )}
+          keyExtractor={(comment, index) => index.toString()}
+        />
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Comunidad Ecocultivo</Text>
-      </View>
-      <View>
-      <View style={styles.createPostContainer}>
+      <FlatList data={posts} renderItem={renderItem} keyExtractor={(item) => item.id} />
+      <Modal visible={modalVisible} animationType="slide">
+        <View style={styles.modalContainer}>
           <TextInput
-            placeholder="¿Algún tip que quieras compartir hoy?"
-            value={newPostContent}
-            onChangeText={setNewPostContent}
+            value={editPostContent}
+            onChangeText={setEditPostContent}
+            placeholder="Editar contenido del post"
             style={styles.postInput}
           />
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.buttonImage} onPress={pickImage}>
-              <Ionicons name="camera" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={handleCreatePost}>
-              <Text style={styles.buttonText}>Crear Post</Text>
-            </TouchableOpacity>
-          </View>
+          <Button title="Guardar Cambios" onPress={handleEditPost} />
+          <Button title="Cancelar" onPress={() => setModalVisible(false)} />
+        </View>
+      </Modal>
+      <View style={styles.createPostContainer}>
+        <TextInput
+          placeholder="¿Algún tip que quieras compartir hoy?"
+          value={newPostContent}
+          onChangeText={setNewPostContent}
+          style={styles.postInput}
+        />
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.buttonImage} onPress={pickImage}>
+            <Ionicons name="camera" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleCreatePost}>
+            <Text style={styles.buttonText}>Crear Post</Text>
+          </TouchableOpacity>
         </View>
       </View>
-
-        <FlatList
-          data={posts}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-        />
-
     </SafeAreaView>
   );
 };
@@ -348,6 +393,27 @@ const styles = StyleSheet.create({
   commentUser: {
     fontWeight: 'bold',
   },
+  postActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
+  editButton: {
+    marginRight: 10,
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+
+  },
+  deleteButton: {
+    marginLeft: 10,
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
+
 
 export default ComunidadScreen;
