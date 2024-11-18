@@ -27,7 +27,7 @@ const Mercado = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [productosCarrito, setProductosCarrito] = useState([]);
-  
+
   useEffect(() => {
     const fetchProductos = async () => {
       try {
@@ -42,23 +42,57 @@ const Mercado = () => {
   }, []);
 
   const handleComprar = (producto) => {
-    setProductosCarrito((prev) => [...prev, producto]); // Añade el producto al carrito
-    setIsModalVisible(true); // Abre el modal del carrito
+    setProductosCarrito((prev) => {
+      const index = prev.findIndex((p) => p.id === producto.id);
+      if (index !== -1) {
+        // Si el producto ya está en el carrito, incrementamos la cantidad
+        const updatedCarrito = [...prev];
+        updatedCarrito[index].cantidad += 1;
+        return updatedCarrito;
+      } else {
+        // Si el producto no está en el carrito, lo agregamos con cantidad 1
+        return [...prev, { ...producto, cantidad: 1 }];
+      }
+    });
+    setIsModalVisible(true);
+  };
+
+  const handleCerrarCarrito = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleComprarFinal = () => {
+    alert("Compra procesada con éxito!");
+    setIsModalVisible(false);
+    setProductosCarrito([]);
+  };
+
+  const handleIncrementar = (productoId) => {
+    setProductosCarrito((prev) =>
+      prev.map((producto) =>
+        producto.id === productoId
+          ? { ...producto, cantidad: producto.cantidad + 1 }
+          : producto
+      )
+    );
+  };
+
+  const handleDecrementar = (productoId) => {
+    setProductosCarrito((prev) =>
+      prev.map((producto) =>
+        producto.id === productoId && producto.cantidad > 1
+          ? { ...producto, cantidad: producto.cantidad - 1 }
+          : producto
+      )
+    );
+  };
+
+  const handleEliminar = (productoId) => {
+    setProductosCarrito((prev) => prev.filter((producto) => producto.id !== productoId));
   };
 
   const totalPages = Math.ceil(productos.length / PAGE_SIZE);
   const paginatedProductos = productos.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  const handleCerrarCarrito = () => {
-    setIsModalVisible(false); // Cierra el modal del carrito
-  };
-
-  const handleComprarFinal = () => {
-    // Luego agregamos la lógica para procesar la compra
-    alert("Compra procesada con éxito!");
-    setIsModalVisible(false);
-    setProductosCarrito([]); // Se vacía el carrito después de la compra
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -94,13 +128,8 @@ const Mercado = () => {
         ))}
       </View>
 
-      {/* Modal de carrito (Desliza desde el lado derecho) */}
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={handleCerrarCarrito}
-      >
+      {/* Modal de carrito */}
+      <Modal visible={isModalVisible} animationType="slide" transparent={true} onRequestClose={handleCerrarCarrito}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Carrito de Compras</Text>
@@ -109,14 +138,38 @@ const Mercado = () => {
               productosCarrito.map((producto) => (
                 <View key={producto.id} style={styles.productoEnCarrito}>
                   <Image source={{ uri: producto.imagen }} style={styles.imagenProductoCarrito} />
-                      <Text>{producto.nombre}</Text>
-                      <Text>{`$${producto.precio}`}</Text>
+                  <View style={styles.infoProducto}>
+                    <Text>{producto.nombre}</Text>
+                    <Text>{$${producto.precio}}</Text>
+                    
+                    {/* Botón Eliminar */}
+                    <TouchableOpacity onPress={() => handleEliminar(producto.id)} style={styles.botonEliminar}>
+                      <Text style={styles.textoBotonEliminar}>Eliminar</Text>
+                    </TouchableOpacity>
+                    
+                    {/* Contador de cantidad */}
+                    <View style={styles.contadorContainer}>
+                      <TouchableOpacity
+                        onPress={() => handleDecrementar(producto.id)}
+                        style={styles.botonContador}
+                      >
+                        <Text style={styles.textoContador}>-</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.cantidadTexto}>{producto.cantidad}</Text>
+                      <TouchableOpacity
+                        onPress={() => handleIncrementar(producto.id)}
+                        style={styles.botonContador}
+                      >
+                        <Text style={styles.textoContador}>+</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-                ))
-              ) : (
-                <Text>No hay productos en el carrito.</Text>
-              )}
+                </View>
+              ))
+            ) : (
+              <Text>No hay productos en el carrito.</Text>
+            )}
+
             </ScrollView>
             <View style={styles.modalButtons}>
               <Button title="Cerrar carrito" onPress={handleCerrarCarrito} />
@@ -222,7 +275,6 @@ const styles = StyleSheet.create({
   pageButtonText: {
     color: 'white',
   },
-  // Estilos para Modal del carrito de compras
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -231,38 +283,74 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     backgroundColor: 'white',
-    width: '60%', // Espacio que ocupa el carrito, ajustable a nuestro gusto
-    height: '100%', // Ocupa toda la altura de la pantalla
+    width: '60%',
+    height: '100%',
     position: 'absolute',
     top: 0,
     right: 0,
     padding: 20,
     borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
   },
   modalTitle: {
-    paddingTop: 40,
+    marginTop: 40,
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 15,
+    textAlign: 'center',
   },
   scrollContainer: {
-    flex: 1,
+    marginBottom: 20,
   },
   productoEnCarrito: {
-    paddingTop: 10,
     flexDirection: 'row',
-    marginBottom: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
     alignItems: 'center',
   },
   imagenProductoCarrito: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: 5,
     marginRight: 10,
   },
   infoProducto: {
     flex: 1,
+  },
+  botonEliminar: {
+    backgroundColor: 'red',
+    paddingVertical: 5,
+    paddingHorizontal: 5,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoBotonEliminar: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  contadorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+    marginBottom: 5,
+  },
+  botonContador: {
+    backgroundColor: '#ddd',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  textoContador: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  cantidadTexto: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
   modalButtons: {
     marginTop: 20,
@@ -278,6 +366,17 @@ const styles = StyleSheet.create({
   textoBotonFinal: {
     color: 'white',
     fontSize: 18,
+  },
+  botonCarrito: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: 'green',
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
