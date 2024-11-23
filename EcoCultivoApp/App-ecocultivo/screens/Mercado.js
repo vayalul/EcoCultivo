@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Modal, Button, ScrollView } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Modal, Button, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { db } from '../credenciales';
 import { collection, getDocs } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
 
 const PAGE_SIZE = 6;
 
@@ -27,6 +28,7 @@ const Mercado = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [productosCarrito, setProductosCarrito] = useState([]);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -41,7 +43,7 @@ const Mercado = () => {
     fetchProductos();
   }, []);
 
-  const handleComprar = (producto) => {
+  const handleAnadir = (producto) => {
     setProductosCarrito((prev) => {
       const index = prev.findIndex((p) => p.id === producto.id);
       if (index !== -1) {
@@ -57,12 +59,6 @@ const Mercado = () => {
 
   const handleCerrarCarrito = () => {
     setIsModalVisible(false);
-  };
-
-  const handleComprarFinal = () => {
-    alert("Compra procesada con éxito!");
-    setIsModalVisible(false);
-    setProductosCarrito([]);
   };
 
   const handleIncrementar = (productoId) => {
@@ -89,6 +85,21 @@ const Mercado = () => {
     setProductosCarrito((prev) => prev.filter((producto) => producto.id !== productoId));
   };
 
+  const handleComprar = () => {
+    if (productosCarrito.length === 0) {
+      Alert.alert(
+        'Mercado EcoCultivo',
+        'El carrito está vacío. Seleccione al menos un producto para continuar.',
+        [{ text: 'Aceptar'}]
+      );
+      return;
+    }
+    navigation.navigate('ResumenCompra', { 
+      productosCarrito,
+      setProductosCarrito
+    });
+  };
+
   const totalPages = Math.ceil(productos.length / PAGE_SIZE);
   const paginatedProductos = productos.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
@@ -103,7 +114,7 @@ const Mercado = () => {
 
       <FlatList
         data={paginatedProductos}
-        renderItem={({ item }) => <ProductoItem producto={item} onComprar={handleComprar} />}
+        renderItem={({ item }) => <ProductoItem producto={item} onComprar={handleAnadir} />}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.filaProductos}
@@ -127,13 +138,13 @@ const Mercado = () => {
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Carrito de Compras</Text>
             <ScrollView style={styles.scrollContainer}>
-              {productosCarrito.length > 0 ? (
+              {productosCarrito.length > 0 ? ( 
                 productosCarrito.map((producto) => (
                   <View key={producto.id} style={styles.productoEnCarrito}>
                     <Image source={{ uri: producto.imagen }} style={styles.imagenProductoCarrito} />
                     <View style={styles.infoProducto}>
                       <Text>{producto.nombre}</Text>
-                      <Text>{`$${producto.precio}`}</Text>
+                      <Text>{`$${producto.precio * producto.cantidad}`}</Text>
                       <TouchableOpacity onPress={() => handleEliminar(producto.id)} style={styles.botonEliminar}>
                         <Text style={styles.textoBotonEliminar}>Eliminar</Text>
                       </TouchableOpacity>
@@ -160,8 +171,9 @@ const Mercado = () => {
               )}
             </ScrollView>
             <View style={styles.modalButtons}>
+              <Text>Total: ${productosCarrito.reduce((acc, p) => acc + p.precio * p.cantidad, 0)}</Text> 
               <Button title="Cerrar carrito" onPress={handleCerrarCarrito} />
-              <TouchableOpacity style={styles.botonComprarFinal} onPress={handleComprarFinal}>
+              <TouchableOpacity style={styles.botonComprarFinal} onPress={handleComprar}>
                 <Text style={styles.textoBotonFinal}>Comprar</Text>
               </TouchableOpacity>
             </View>
@@ -180,11 +192,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f8f0',
   },
   headerContainer: {
-    flexDirection: 'row', // Alinea el texto y el ícono horizontalmente
-    justifyContent: 'space-between', // Espacio entre los elementos
-    alignItems: 'center', // Centra los elementos verticalmente
-    marginTop: 10, // Margen superior para separar del borde
-    marginBottom: 20, // Separación con el contenido siguiente
+    flexDirection: 'row',
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginTop: 10, 
+    marginBottom: 20, 
   },
   botonCarrito: {
     backgroundColor: 'green',
@@ -370,3 +382,5 @@ const styles = StyleSheet.create({
 });
 
 export default Mercado; 
+
+

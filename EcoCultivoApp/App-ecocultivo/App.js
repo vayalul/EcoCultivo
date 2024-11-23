@@ -9,6 +9,7 @@ import Login from './screens/Login';
 import Registro from './screens/Registro';
 import PasswordReset from './screens/PasswordReset';
 import NotFoundPage from './screens/NotFoundPage';
+import ResumenCompra from './screens/ResumenCompra';
 export default function App() {
 
   const Stack = createStackNavigator();
@@ -55,6 +56,15 @@ function MyStack() {
       <Stack.Screen name="NotFoundPage" component={NotFoundPage} 
        options={{
         title: 'Not Found 404',
+        headerTintColor: 'white',
+        headerShown: false,
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: '#128C7E'},
+          }} />
+      <Stack.Screen name="ResumenCompra" component={ResumenCompra} 
+       options={{
+        title: 'Resumen de la Compra',
         headerTintColor: 'white',
         headerShown: false,
         headerTitleAlign: 'center',
