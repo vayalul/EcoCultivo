@@ -9,6 +9,8 @@ import Login from './screens/Login';
 import Registro from './screens/Registro';
 import PasswordReset from './screens/PasswordReset';
 import NotFoundPage from './screens/NotFoundPage';
+import QuienesSomos from './screens/QuienesSomos';
+
 export default function App() {
 
   const Stack = createStackNavigator();
@@ -61,6 +63,15 @@ function MyStack() {
         headerStyle: {
           backgroundColor: '#128C7E'},
           }} />
+      <Stack.Screen name="QuienesSomos" component={QuienesSomos}
+        options={{
+          title: 'Quiénes Somos',
+          headerTintColor: 'white',
+          headerShown: false,
+          headerTitleAlign: 'center',
+          headerStyle: {
+            backgroundColor: '#128C7E'},
+            }} />
     </Stack.Navigator>
   );
 }
