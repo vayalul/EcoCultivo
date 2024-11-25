@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
 const ResumenCompra = ({ route }) => {
-    const { productosCarrito, setProductosCarrito } = route.params;
+    const { productosCarrito, setProductosCarrito } = useContext(CarritoContext);
 
     const incrementarCantidad = (productoId) => {
         setProductosCarrito((prev) =>
@@ -24,85 +24,114 @@ const ResumenCompra = ({ route }) => {
         );
     };
 
+    const calcularEnvio = () => 3000;
+
     const calcularTotal = () =>
-        productosCarrito.reduce((acc, producto) => acc + producto.precio * producto.cantidad, 0);
-    };
+        productosCarrito.reduce((acc, producto) => acc + producto.precio * producto.cantidad, 0) + calcularEnvio();
 
     return (
         <View style={styles.container}>
-          <View style={styles.headerRow}>
-            <Text style={styles.headerText}>Producto</Text>
-            <Text style={styles.headerText}>Cantidad</Text>
-            <Text style={styles.headerText}>Precio</Text>
-          </View>
-          <View style={styles.separator} />
-    
-          {productosCarrito.map((producto) => (
-            <View key={producto.id} style={styles.productRow}>
-              <View style={styles.productColumn}>
-                <Image source={{ uri: producto.imagen }} style={styles.productImage} />
-              </View>
-    
-              <View style={styles.quantityColumn}>
-                <TouchableOpacity onPress={() => decrementarCantidad(producto.id)} style={styles.button}>
-                  <Text style={styles.buttonText}>-</Text>
-                </TouchableOpacity>
-                <Text style={styles.quantityText}>{producto.cantidad}</Text>
-                <TouchableOpacity onPress={() => incrementarCantidad(producto.id)} style={styles.button}>
-                  <Text style={styles.buttonText}>+</Text>
-                </TouchableOpacity>
-              </View>
-    
-              <View style={styles.priceColumn}>
-                <Text style={styles.priceText}>${producto.precio}</Text>
-              </View>
+            <Text style={styles.title}>Resumen de Compra</Text>
+
+            <View style={styles.header}>
+                <Text style={styles.headerText}>Productos</Text>
+                <Text style={styles.headerText}>Precio</Text>
+                <Text style={styles.headerText}>Cantidad</Text>
             </View>
-          ))}
+
+            <View style={styles.separator} />
+
+            {productosCarrito.map((producto) => (
+                <View key={producto.id} style={styles.productRow}>
+                    <Image source={{ uri: producto.imagen }} style={styles.productImage} />
+                    <Text style={styles.productPrice}>{producto.precio}</Text>
+
+                    <View style={styles.quantityControls}>
+                        <TouchableOpacity
+                            onPress={() => decrementarCantidad(producto.id)}
+                            style={styles.button}
+                        >
+                            <Text style={styles.buttonText}>-</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.quantity}>{producto.cantidad}</Text>
+                        <TouchableOpacity
+                            onPress={() => incrementarCantidad(producto.id)}
+                            style={styles.button}
+                        >
+                            <Text style={styles.buttonText}>+</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            ))}
+
+            <View style={styles.subtotalRow}>
+                <Text style={styles.subtotalText}>SubTotal:</Text>
+                <Text style={styles.subtotalText}>
+                  ${productosCarrito.reduce((acc, producto) => acc + producto.precio * producto.cantidad, 0)}
+                </Text>
+            </View>
+
+            <View style={styles.envioRow}>
+                <Text style={styles.envioText}>Envío:</Text>
+                <Text style={styles.envioText}>${calcularEnvio()}</Text>
+            </View>
+
+            <View style={styles.totalRow}>
+                <Text style={styles.totalText}>Total:</Text>
+                <Text style={styles.totalText}>${calcularTotal()}</Text>
+            </View>
         </View>
-      );
-    
-    const styles = StyleSheet.create({
-      container: {
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
         flex: 1,
-        padding: 10,
+        padding: 20,
         backgroundColor: '#fff',
-      },
-      headerRow: {
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        paddingTop: 30,
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 5,
-      },
-      headerText: {
+        marginBottom: 10,
+    },
+    headerText: {
         fontSize: 16,
         fontWeight: 'bold',
-      },
-      separator: {
+    },
+    separator: {
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
-        marginBottom: 10,
-      },
-      productRow: {
+        marginVertical: 10,
+    },
+    productRow: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        alignItems: 'center',
         marginBottom: 15,
-      },
-      productColumn: {
-        flex: 1,
-        alignItems: 'center',
-      },
-      productImage: {
+    },
+    productImage: {
         width: 60,
         height: 60,
         resizeMode: 'contain',
-      },
-      quantityColumn: {
-        flex: 1,
+    },
+    productPrice: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    quantityControls: {
         flexDirection: 'row',
-        justifyContent: 'center',
         alignItems: 'center',
-      },
-      button: {
+    },
+    button: {
         width: 30,
         height: 30,
         justifyContent: 'center',
@@ -110,23 +139,44 @@ const ResumenCompra = ({ route }) => {
         backgroundColor: '#ddd',
         borderRadius: 5,
         marginHorizontal: 5,
-      },
-      buttonText: {
+    },
+    buttonText: {
         fontSize: 18,
         fontWeight: 'bold',
-      },
-      quantityText: {
+    },
+    quantity: {
         fontSize: 16,
         fontWeight: 'bold',
-      },
-      priceColumn: {
-        flex: 1,
-        alignItems: 'center',
-      },
-      priceText: {
-        fontSize: 16,
+        textAlign: 'center',
+    },
+    subtotalRow: {
+        marginTop: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderTopWidth: 1,
+        borderTopColor: '#ccc',
+        paddingTop: 10,
+    },
+    totalRow: {
+      marginTop: 20,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      borderTopWidth: 1,
+      borderTopColor: '#ccc',
+      paddingTop: 10,
+  },
+  envioRow: {
+    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    paddingTop: 10,
+},
+    totalText: {
+        fontSize: 18,
         fontWeight: 'bold',
-      },
-    });
-    
-    export default ResumenCompra;
+    },
+});
+
+export default ResumenCompra;
