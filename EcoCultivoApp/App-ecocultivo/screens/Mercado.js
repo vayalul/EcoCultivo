@@ -15,7 +15,7 @@ const ProductoItem = ({ producto, onComprar }) => (
       {producto.nombre}
     </Text>
     {producto.precio !== undefined && (
-      <Text style={styles.precioProducto}>{`$${producto.precio}`}</Text>
+      <Text style={styles.precioProducto}>${producto.precio}</Text>
     )}
     <TouchableOpacity onPress={() => onComprar(producto)} style={styles.botonComprar}>
       <Text style={styles.textoBoton}>Añadir</Text>
@@ -25,9 +25,9 @@ const ProductoItem = ({ producto, onComprar }) => (
 
 const Mercado = () => {
   const [productos, setProductos] = useState([]);
+  const [productosCarrito, setProductosCarrito] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [productosCarrito, setProductosCarrito] = useState([]);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -73,11 +73,13 @@ const Mercado = () => {
 
   const handleDecrementar = (productoId) => {
     setProductosCarrito((prev) =>
-      prev.map((producto) =>
-        producto.id === productoId && producto.cantidad > 1
-          ? { ...producto, cantidad: producto.cantidad - 1 }
-          : producto
-      )
+      prev
+        .map((producto) =>
+          producto.id === productoId && producto.cantidad > 1
+            ? { ...producto, cantidad: producto.cantidad - 1 }
+            : producto
+        )
+        .filter((producto) => producto.cantidad > 0)
     );
   };
 
@@ -94,10 +96,7 @@ const Mercado = () => {
       );
       return;
     }
-    navigation.navigate('ResumenCompra', { 
-      productosCarrito,
-      setProductosCarrito
-    });
+    navigation.navigate('ResumenCompra', { productosCarrito });
   };
 
   const totalPages = Math.ceil(productos.length / PAGE_SIZE);
@@ -144,7 +143,7 @@ const Mercado = () => {
                     <Image source={{ uri: producto.imagen }} style={styles.imagenProductoCarrito} />
                     <View style={styles.infoProducto}>
                       <Text>{producto.nombre}</Text>
-                      <Text>{`$${producto.precio * producto.cantidad}`}</Text>
+                      <Text>${producto.precio * producto.cantidad}</Text>
                       <TouchableOpacity onPress={() => handleEliminar(producto.id)} style={styles.botonEliminar}>
                         <Text style={styles.textoBotonEliminar}>Eliminar</Text>
                       </TouchableOpacity>
@@ -382,5 +381,3 @@ const styles = StyleSheet.create({
 });
 
 export default Mercado; 
-
-

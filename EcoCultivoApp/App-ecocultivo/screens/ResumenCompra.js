@@ -1,87 +1,136 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, Button } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const ResumenCompra = ({ route }) => {
-    const { productosCarrito, setProductosCarrito } = useContext(CarritoContext);
+  const { productosCarrito } = route.params;
+  const [productos, setProductos] = useState(productosCarrito);
+  const navigation = useNavigation();
 
-    const incrementarCantidad = (productoId) => {
-        setProductosCarrito((prev) =>
-            prev.map((producto) =>
-                producto.id === productoId
-                    ? { ...producto, cantidad: producto.cantidad + 1 }
-                    : producto
-            )
-        );
-    };
-
-    const decrementarCantidad = (productoId) => {
-        setProductosCarrito((prev) =>
-            prev.map((producto) =>
-                producto.id === productoId && producto.cantidad > 1
-                    ? { ...producto, cantidad: producto.cantidad - 1 }
-                    : producto
-            )
-        );
-    };
-
-    const calcularEnvio = () => 3000;
-
-    const calcularTotal = () =>
-        productosCarrito.reduce((acc, producto) => acc + producto.precio * producto.cantidad, 0) + calcularEnvio();
-
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Resumen de Compra</Text>
-
-            <View style={styles.header}>
-                <Text style={styles.headerText}>Productos</Text>
-                <Text style={styles.headerText}>Precio</Text>
-                <Text style={styles.headerText}>Cantidad</Text>
-            </View>
-
-            <View style={styles.separator} />
-
-            {productosCarrito.map((producto) => (
-                <View key={producto.id} style={styles.productRow}>
-                    <Image source={{ uri: producto.imagen }} style={styles.productImage} />
-                    <Text style={styles.productPrice}>{producto.precio}</Text>
-
-                    <View style={styles.quantityControls}>
-                        <TouchableOpacity
-                            onPress={() => decrementarCantidad(producto.id)}
-                            style={styles.button}
-                        >
-                            <Text style={styles.buttonText}>-</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.quantity}>{producto.cantidad}</Text>
-                        <TouchableOpacity
-                            onPress={() => incrementarCantidad(producto.id)}
-                            style={styles.button}
-                        >
-                            <Text style={styles.buttonText}>+</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            ))}
-
-            <View style={styles.subtotalRow}>
-                <Text style={styles.subtotalText}>SubTotal:</Text>
-                <Text style={styles.subtotalText}>
-                  ${productosCarrito.reduce((acc, producto) => acc + producto.precio * producto.cantidad, 0)}
-                </Text>
-            </View>
-
-            <View style={styles.envioRow}>
-                <Text style={styles.envioText}>Envío:</Text>
-                <Text style={styles.envioText}>${calcularEnvio()}</Text>
-            </View>
-
-            <View style={styles.totalRow}>
-                <Text style={styles.totalText}>Total:</Text>
-                <Text style={styles.totalText}>${calcularTotal()}</Text>
-            </View>
-        </View>
+  const incrementarCantidad = (productoId) => {
+    setProductos((prev) =>
+      prev.map((producto) =>
+        producto.id === productoId
+          ? { ...producto, cantidad: producto.cantidad + 1 }
+          : producto
+      )
     );
+  };
+
+  const decrementarCantidad = (productoId) => {
+    setProductos((prev) =>
+      prev.map((producto) =>
+        producto.id === productoId && producto.cantidad > 1
+          ? { ...producto, cantidad: producto.cantidad - 1 }
+          : producto
+      )
+    );
+  };
+
+  const eliminarProducto = (productoId) => {
+    setProductos((prev) => {
+      const productosActualizados = prev.filter((producto) => producto.id !== productoId);
+      if (productosActualizados.length === 0) {
+        setTimeout(() => handleVolver(), 0);
+      }
+      return productosActualizados;
+    });
+  };
+
+  const calcularEnvio = () => 3000;
+
+  const calcularTotal = () =>
+    productos.reduce((acc, producto) => acc + producto.precio * producto.cantidad, 0) + calcularEnvio();
+
+  const handleElegirMasProductos = () => {
+    navigation.navigate('Mercado');
+  }
+
+  const handlePagar = () => {
+    Alert.alert(
+        'Mercado EcoCultivo',
+        'Procediendo al pago....',
+        [{ text: 'Cargando' }]
+      );
+    };
+
+  const handleVolver = () => {
+    Alert.alert(
+      'Mercado EcoCultivo',
+      'No hay productos en el carrito.',
+      [{ text: 'Volver', onPress: () => navigation.navigate('Mercado') }]
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Resumen de Compra</Text>
+
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Productos</Text>
+        <Text style={styles.headerText}>Precio</Text>
+        <Text style={styles.headerText}>Cantidad</Text>
+        <Text style={styles.headerText}>Eliminar</Text>
+      </View>
+
+      <View style={styles.separator} />
+
+      {productos.map((producto) => (
+        <View key={producto.id} style={styles.productRow}>
+          <Image source={{ uri: producto.imagen }} style={styles.productImage} />
+          <Text style={styles.productPrice}>{producto.precio}</Text>
+
+          <View style={styles.quantityControls}>
+            <TouchableOpacity
+              onPress={() => decrementarCantidad(producto.id)}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>-</Text>
+            </TouchableOpacity>
+            <Text style={styles.quantity}>{producto.cantidad}</Text>
+            <TouchableOpacity
+              onPress={() => incrementarCantidad(producto.id)}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>+</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity onPress={() => eliminarProducto(producto.id)} style={styles.eliminarButton}>
+            <Text style={styles.eliminarButtonText}>X</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+
+      <View style={styles.subtotalRow}>
+        <Text style={styles.subtotalText}>SubTotal:</Text>
+        <Text style={styles.subtotalText}>
+          ${productos.reduce((acc, producto) => acc + producto.precio * producto.cantidad, 0)}
+        </Text>
+      </View>
+
+      <View style={styles.envioRow}>
+        <Text style={styles.envioText}>Envío:</Text>
+        <Text style={styles.envioText}>${calcularEnvio()}</Text>
+      </View>
+
+      <View style={styles.totalRow}>
+        <Text style={styles.totalText}>Total:</Text>
+        <Text style={styles.totalText}>${calcularTotal()}</Text>
+      </View>
+
+      <View>
+        <TouchableOpacity style={styles.botonPagar} onPress={handlePagar}>
+                <Text style={styles.textoPagar}>Proceder al Pago</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View>
+        <TouchableOpacity style={styles.botonElegirProductos} onPress={handleElegirMasProductos}>
+                <Text style={styles.textoElegirProductos}>Elegir Más Productos</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -149,6 +198,16 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
     },
+    eliminarButton: {
+        marginLeft: 10,
+        backgroundColor: '#ff4d4d',
+        padding: 10,
+        borderRadius: 5,
+    },
+    eliminarButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
     subtotalRow: {
         marginTop: 20,
         flexDirection: 'row',
@@ -176,6 +235,32 @@ const styles = StyleSheet.create({
     totalText: {
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    botonElegirProductos: {
+        backgroundColor: 'grey',
+        paddingVertical: 10,
+        paddingHorizontal: 40,
+        borderRadius: 5,
+        marginTop: 10,
+    },
+    textoElegirProductos: {
+        color: '#fff',
+        fontWeight: 'light',
+        fontSize: 18,
+        textAlign: 'center',
+    },
+    botonPagar: {
+        backgroundColor: 'green',
+        paddingVertical: 10,
+        paddingHorizontal: 40,
+        borderRadius: 5,
+        marginTop: 10,
+    },
+    textoPagar: {
+        textAlign: 'center',
+        fontWeight: 'light',
+        color: '#fff',
+        fontSize: 18,
     },
 });
 

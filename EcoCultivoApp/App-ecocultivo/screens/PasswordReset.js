@@ -19,7 +19,7 @@ export default function PasswordReset({ navigation }) {
         try {
             await sendPasswordResetEmail(auth, email);
             Alert.alert('Correo enviado', 'Revise su correo para restablecer la contraseña');
-            navigation.navigate('Login'); // Redirigir a la pantalla de Login después de enviar el enlace
+            navigation.navigate('Login');
         } catch (error) {
             Alert.alert('Error', error.message);
         }
@@ -45,8 +45,8 @@ export default function PasswordReset({ navigation }) {
                         <TextInput placeholder="Ingrese su correo electrónico" style={{paddingHorizontal: 15}}
                             value={email}
                             onChangeText={setEmail}
-                            keyboardType="email-address" // Para mejorar la experiencia del usuario
-                            autoCapitalize="none" // Evitar que el primer carácter sea mayúscula
+                            keyboardType="email-address"
+                            autoCapitalize="none" 
                         />
                     </View>
                     <View style={styles.padreBoton}>
