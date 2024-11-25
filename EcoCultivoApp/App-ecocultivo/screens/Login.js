@@ -61,8 +61,8 @@ export default function Login({ navigation }) {
     }
 
     const onFooterLinkPress2 = () => {
-        navigation.navigate('NotFoundPage')
-    }
+        navigation.navigate('QuienesSomos'); // Cambiamos la ruta para dirigir a QuienesSomos
+    };
 
     const onForgotPasswordPress = () => {
         navigation.navigate('PasswordReset');
