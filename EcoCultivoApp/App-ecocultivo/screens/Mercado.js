@@ -172,12 +172,8 @@ const Mercado = () => {
             <View style={styles.modalButtons}>
               <Text>Total: ${productosCarrito.reduce((acc, p) => acc + p.precio * p.cantidad, 0)}</Text> 
               <Button title="Cerrar carrito" onPress={handleCerrarCarrito} />
-<<<<<<< HEAD
-              <TouchableOpacity style={styles.botonComprarFinal} onPress={handleComprarFinal}>
-=======
               <TouchableOpacity style={styles.botonComprarFinal} onPress={handleComprar}>
                 <Text style={styles.textoBotonFinal}>Comprar</Text>
->>>>>>> Valentina
               </TouchableOpacity>
             </View>
           </View>
