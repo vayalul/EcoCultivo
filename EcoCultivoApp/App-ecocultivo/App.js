@@ -9,8 +9,12 @@ import Login from './screens/Login';
 import Registro from './screens/Registro';
 import PasswordReset from './screens/PasswordReset';
 import NotFoundPage from './screens/NotFoundPage';
+<<<<<<< HEAD
 import QuienesSomos from './screens/QuienesSomos';
 
+=======
+import ResumenCompra from './screens/ResumenCompra';
+>>>>>>> Valentina
 export default function App() {
 
   const Stack = createStackNavigator();
@@ -63,6 +67,7 @@ function MyStack() {
         headerStyle: {
           backgroundColor: '#128C7E'},
           }} />
+<<<<<<< HEAD
       <Stack.Screen name="QuienesSomos" component={QuienesSomos}
         options={{
           title: 'Quiénes Somos',
@@ -72,6 +77,17 @@ function MyStack() {
           headerStyle: {
             backgroundColor: '#128C7E'},
             }} />
+=======
+      <Stack.Screen name="ResumenCompra" component={ResumenCompra} 
+       options={{
+        title: 'Resumen de la Compra',
+        headerTintColor: 'white',
+        headerShown: false,
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: '#128C7E'},
+          }} />
+>>>>>>> Valentina
     </Stack.Navigator>
   );
 }
