@@ -19,6 +19,10 @@ const ComunidadScreen = () => {
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'comunidadd'), (snapshot) => {
       const postsData = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+      
+      // ordena los posts mas recientes primero
+      postsData.sort((a, b) => b.fecha.toDate() - a.fecha.toDate());
+      
       setPosts(postsData);
     });
     return unsubscribe;
@@ -294,6 +298,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingTop: 25,
   },
   scrollContainer: {
     flex: 1,
@@ -310,6 +315,9 @@ const styles = StyleSheet.create({
   createPostContainer: {
     paddingHorizontal: 15,
     marginBottom: 20,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 12,
+    padding: 10,
   },
   postInput: {
     height: 40,
@@ -340,7 +348,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   postContainer: {
-    marginVertical: 10,
+    marginVertical: 5,
     padding: 15,
     backgroundColor: '#fff',
     borderRadius: 5,

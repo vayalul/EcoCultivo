@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, Button, Image, TextInput, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Alert, Button, Image, TextInput, ActivityIndicator, TouchableOpacity, StyleSheet, Modal} from 'react-native';
 import { auth, db } from '../credenciales';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { signOut, updateProfile } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 
 const Profile = () => {
@@ -15,6 +15,9 @@ const Profile = () => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(true);
     const [imageUploading, setImageUploading] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [newUsername, setNewUsername] = useState('');
+    const [newPassword, setNewPassword] = useState('');
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -98,6 +101,52 @@ const Profile = () => {
         }
     };
 
+    const handleUpdateProfile = async () => {
+        setNewUsername('');
+        setNewPassword('');
+        try {
+            const userRef = doc(db, 'usuarios', auth.currentUser.uid);
+            const userSnap = await getDoc(userRef);
+    
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+    
+                // Validar que no ingrese el mismo usuario o contraseña
+                if (newUsername === userData.username) {
+                    Alert.alert('Error', 'El nombre de usuario ingresado ya es el actual.');
+                    return;
+                }
+                if (newPassword && newPassword === auth.currentUser.password) {
+                    Alert.alert('Error', 'La contraseña ingresada ya es la actual.');
+                    return;
+                }
+    
+                // Actualizar solo si hay cambios válidos
+                if (newUsername && newUsername !== userData.username) {
+                    await updateDoc(userRef, { username: newUsername });
+                    setUsername(newUsername);
+                }
+                if (newPassword && newPassword !== auth.currentUser.password) {
+                    await updatePassword(auth.currentUser, newPassword);
+                }
+    
+                Alert.alert('Éxito', 'Perfil actualizado correctamente.');
+                setModalVisible(false);
+            } else {
+                Alert.alert('Error', 'No se pudo encontrar el usuario.');
+            }
+        } catch (error) {
+            console.error('Error al actualizar perfil', error);
+            Alert.alert('Error', 'Hubo un error al actualizar el perfil.');
+        }
+    };
+
+    const handleCloseModal = () => {
+        setNewUsername('');
+        setNewPassword('');
+        setModalVisible(false);
+    };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -142,12 +191,47 @@ const Profile = () => {
                     editable={false}
                 />
 
+                <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
+                    <Text style={styles.buttonText}>Actualizar Perfil</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.button} onPress={() => Alert.alert('Ayuda', 'Contacta a soporte en soporte@ecocultivo.com')}>
+                    <Text style={styles.buttonText}>Ayuda y Soporte</Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity style={styles.logoutButton} onPress={handleLogOut}>
                     <Ionicons name="log-out-outline" size={24} color="#fff" style={styles.logoutIcon} />
                     <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* Modal */}
+            <Modal visible={modalVisible} transparent={true} animationType="slide">
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Actualizar Perfil</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nuevo Usuario"
+                            value={newUsername}
+                            onChangeText={setNewUsername}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nueva Contraseña"
+                            secureTextEntry
+                            value={newPassword}
+                            onChangeText={setNewPassword}
+                        />
+                        <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
+                            <Text style={styles.buttonText}>Guardar Cambios</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.logoutButton} onPress={handleCloseModal}>
+                            <Text style={styles.logoutButtonText}>Cerrar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -242,6 +326,24 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#f44336',
         fontWeight: 'bold',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '80%',
+        padding: 20,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 20,
     },
 });
 
