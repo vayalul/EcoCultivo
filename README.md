@@ -8,8 +8,7 @@ Este proyecto ha sido realizado mediante el uso de React Native EXPO, utilizando
 Reference-style: 
 ![alt text][logo]
 
-[logo]: https://firebasestorage.googleapis.com/v0/b/ecocultivoapp.appspot.com/o/img%2FEcoCultivo.png?alt=media&token=7584781b-e9ad-4f6e-8a01-8cdc59f9b88f "Logo Title Text 2"
-alt="EcoCultivo logo" width="240" height="180" border="10" /></a>
+[logo]: https://firebasestorage.googleapis.com/v0/b/ecocultivoapp.appspot.com/o/img%2FEcoCultivo.png?alt=media&token=7584781b-e9ad-4f6e-8a01-8cdc59f9b88f "Logo Title Text 2" alt="EcoCultivo logo" width="240" height="180" border="10" /></a>
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
