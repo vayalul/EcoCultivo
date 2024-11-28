@@ -15,7 +15,12 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    ```bash
    npm install
    ```
-3.- Navega hasta la carpeta "app-ecocultivo" y desde la terminal de Bash ejecuta "npm start"
+3.- Navega hasta la carpeta "app-ecocultivo" y desde la terminal de Bash ejecuta 
+   ```bash
+      npm start
+      ```
 
-4.- Para mejor visualización de nuestro proyecto, te recomendamos instalar la app Expo GO en Android bajo la versión 2.31.2 y ejecutar npm install @react-native-firebase/app@21.00 
->>>>>>> master
+4.- Para mejor visualización de nuestro proyecto, te recomendamos instalar la app Expo GO en Android bajo la versión 2.31.2 y ejecutar
+   ```bash
+      npm install @react-native-firebase/app@21.00 
+      ```
