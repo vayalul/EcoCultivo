@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Modal, Button, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { db } from '../credenciales';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, Firestore } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 0,
     paddingHorizontal: 10,
-    backgroundColor: '#f0f8f0',
+    backgroundColor: '#f5f5f5',
   },
   headerContainer: {
     flexDirection: 'row',

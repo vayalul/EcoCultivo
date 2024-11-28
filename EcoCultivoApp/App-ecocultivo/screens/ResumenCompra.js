@@ -3,37 +3,12 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, Button } from '
 import { useNavigation } from '@react-navigation/native';
 import { updateDoc, doc } from '@react-native-firebase/firestore';
 import { db } from '../credenciales';
+import FormularioCompra from './FormularioCompra';
 
 const ResumenCompra = ({ route }) => {
   const { productosCarrito } = route.params;
   const [productos, setProductos] = useState(productosCarrito);
   const navigation = useNavigation();
-
-  const handlePagar = async () => {
-    try {
-      for (const producto of productos) { // Verificamos el stock del producto en la bd
-        const productoRef = doc(db, 'productos', producto.id);
-        const productoSnapshot = await getDoc(productoRef);
-        const productoData = productoSnapshot.data();
-
-        if (productoData.cantidad < producto.cantidad) {
-          Alert.alert(
-            'Mercado EcoCultivo',
-            'No hay suficiente stock para ${producto.nombre}',
-            [{ text: 'Aceptar'}]
-          );
-          return; // Detenemos el proceso si no hay stock
-        }
-      }
-      navigation.navigate('FormularioCompra');
-    } catch (error) {
-      console.error('Error al verificar el stock:', error);
-      Alert.alert(
-        'Mercado EcoCultivo', 
-        'Hubo un problema al realizar la compra. Inténtalo nuevamente.', 
-        [{ text: 'Aceptar' }]);
-    }
-  }
 
   const incrementarCantidad = (productoId) => {
     setProductos((prev) =>
@@ -139,7 +114,7 @@ const ResumenCompra = ({ route }) => {
       </View>
 
       <View>
-        <TouchableOpacity style={styles.botonPagar} onPress={handlePagar}>
+        <TouchableOpacity style={styles.botonPagar} onPress={() => navigation.navigate('FormularioCompra')}>
                 <Text style={styles.textoPagar}>Proceder al Pago</Text>
         </TouchableOpacity>
       </View>
