@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "App-ecocultivo",
+    "name": "EcoCultivo",
     "slug": "App-ecocultivo",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -28,6 +28,7 @@
       "eas": {
         "projectId": "5eea1408-71d9-4ca5-8ce2-e7047bc9e896"
       }
-    }
+    },
+    "owner": "myfiurerjose"
   }
 }
