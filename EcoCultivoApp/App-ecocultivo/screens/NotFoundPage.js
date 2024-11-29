@@ -4,11 +4,11 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 const NotFound = ({ navigation }) => {
     return (
         <View style={styles.container}>
-            <Text style={styles.text}>404 Error: Page Not Found</Text>
-            <Text style={styles.text2}>The page you're trying to reach doesn't exist</Text>
+            <Text style={styles.text}>404 Error: Under Construction</Text>
+            <Text style={styles.text2}>The page you're trying to reach doesn't exist yet. Working on it!</Text>
             <TouchableOpacity
                 style={styles.cajaBoton}
-                onPress={() => navigation.navigate('Login')} // Direccionamos el boton a Login
+                onPress={() => navigation.navigate('Mercado')} // Direccionamos el boton a Mercado
                 >
                 <Text style={styles.botonTexto}>Volver a EcoCultivo</Text>
             </TouchableOpacity>

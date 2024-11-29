@@ -93,7 +93,7 @@ try {
         'EcoCultivo',
         'Los datos de la compra se han guardado correctamente'
     );
-    navigation.navigate('WebPay');
+    navigation.navigate('NotFoundPage');
 } catch (error) {
     console.error('Error al guardar los datos de la compra', error);
     Alert.alert(
