@@ -12,6 +12,7 @@ import NotFoundPage from './screens/NotFoundPage';
 import QuienesSomos from './screens/QuienesSomos';
 import ResumenCompra from './screens/ResumenCompra';
 import FormularioCompra from './screens/FormularioCompra';
+import Seguimiento from './screens/Seguimiento';
 
 export default function App() {
 
@@ -86,6 +87,16 @@ function MyStack() {
       <Stack.Screen name="FormularioCompra" component={FormularioCompra} 
        options={{
         title: 'Datos de la Compra',
+        headerTintColor: 'white',
+        headerShown: false,
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: '#128C7E'},
+          }} />
+
+      <Stack.Screen name="Seguimiento" component={Seguimiento} 
+       options={{
+        title: 'Seguimiento',
         headerTintColor: 'white',
         headerShown: false,
         headerTitleAlign: 'center',

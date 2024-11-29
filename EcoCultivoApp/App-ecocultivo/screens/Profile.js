@@ -195,6 +195,10 @@ const Profile = () => {
                     <Text style={styles.buttonText}>Actualizar Perfil</Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('QuienesSomos')}>
+                    <Text style={styles.buttonText}>Sobre EcoCultivo</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity style={styles.button} onPress={() => Alert.alert('Ayuda', 'Contacta a soporte en soporte@ecocultivo.com')}>
                     <Text style={styles.buttonText}>Ayuda y Soporte</Text>
                 </TouchableOpacity>

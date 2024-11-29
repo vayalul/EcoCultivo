@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 export default function QuienesSomos() {
     const abrirEnlace = () => {
@@ -7,6 +8,8 @@ export default function QuienesSomos() {
             console.error('Error al abrir el enlace:', err)
         );
     };
+
+    const navigation = useNavigation();
 
     return (
         <View style={styles.container}>
@@ -17,6 +20,10 @@ export default function QuienesSomos() {
             </Text>
             <TouchableOpacity onPress={abrirEnlace} style={styles.button}>
                 <Text style={styles.buttonText}>Visítanos en GitHub</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Home')}>
+                    <Text style={styles.buttonText}>Volver</Text>
             </TouchableOpacity>
         </View>
     );
@@ -45,6 +52,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 5,
+        marginBottom: 20,
     },
     buttonText: {
         color: 'white',

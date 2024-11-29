@@ -7,6 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import getClima from '../clima';
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
 
 const cultivosDisponibles = [
     {nombrecultivo: 'Tomate'},
@@ -31,6 +32,8 @@ const Miscultivos = () => {
     const [loadingCultivos, setLoadingCultivos] = useState(false);
     const [userId, setUserId] = useState(null);
     const [infoCultivos, setInfoCultivos] = useState([]);
+
+    const navigation = useNavigation();
 
     const getClimaStyle = (temperature) => {
         if (temperature < 10) {
@@ -213,6 +216,13 @@ const Miscultivos = () => {
                             <Image source={{ uri: imageCultivos[item.nombrecultivo] || imageCultivos['defecto'] }} style={styles.imagenCultivo} />
                             <Text style={styles.cultivoText}>Cultivo: {item.nombrecultivo}</Text>
                             <Text style={styles.cultivoText}>Fecha: {item.fechacultivo}</Text>
+
+                            <TouchableOpacity
+                            style={styles.botonSeguimiento}
+                            onPress={() => navigation.navigate('Seguimiento', { cultivo: item })}
+                        >
+                            <Text style={styles.botonTextoSeguimiento}>Seguimiento</Text>
+                        </TouchableOpacity>
                         </View>
                         </TouchableOpacity>
                     )}
@@ -545,6 +555,18 @@ const styles = StyleSheet.create({
     picker: {
         height: 40,
         color: '#388E3C', // Color de texto verde oscuro para mantener el estilo natural
+    },
+    botonSeguimiento: {
+        marginTop: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        backgroundColor: '#4CAF50',
+        borderRadius: 5,
+    },
+    botonTextoSeguimiento: {
+        color: 'white',
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
 
