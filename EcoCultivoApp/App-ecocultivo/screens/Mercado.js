@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   },
   botonCarrito: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 5,
     right: 20,
     backgroundColor: 'green',
     paddingHorizontal: 15,
