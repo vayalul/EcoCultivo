@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, ImageBackground, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from '../credenciales'; // Asegúrate de que la ruta sea correcta
+import { auth } from '../credenciales'; 
 
 export default function PasswordReset({ navigation }) {
     const [email, setEmail] = useState('');
 
-    // useEffect(() => {
-    //     setEmail('');
-    // });
 
     const handleResetPassword = async () => {
         if (!email) {

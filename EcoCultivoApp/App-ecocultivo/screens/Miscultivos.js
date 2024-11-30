@@ -14,7 +14,6 @@ const cultivosDisponibles = [
     {nombrecultivo: 'Ajo'},
     {nombrecultivo: 'Zanahoria'},
     {nombrecultivo: 'Papa'},
-    // Agrega más cultivos aqui
 ]
 
 
@@ -64,7 +63,6 @@ const Miscultivos = () => {
         if(selectedCultivo && fecha)  {
 
             try {
-                // Agregar el cultivo a Firestore
                 await addDoc(collection(db, 'cultivos'), {
                     nombrecultivo: selectedCultivo.nombrecultivo,
                     userId: userId,
@@ -101,23 +99,19 @@ const Miscultivos = () => {
     const obtenerCultivoSelecionado = async (selectedCultivo) => {
         if (selectedCultivo) {
             try {
-              // Creamos la consulta para buscar el campo 'nombrecultivo' que coincide con el nombre del cultivo seleccionado
               const q = query(
                 collection(db, 'infocultivos'),
                 where('nombrecultivo', '==', selectedCultivo.nombrecultivo)
               );
         
-              // Ejecutamos la consulta
               const querySnapshot = await getDocs(q);
         
               if (!querySnapshot.empty) {
-                // Si se encuentra algún documento que coincida, obtenemos los datos
                 const docData = querySnapshot.docs[0].data();
-                setInfoCultivos(docData);  // Guardamos los datos del cultivo en el estado
+                setInfoCultivos(docData); 
               } else {
-                // Si no se encuentra información
                 console.log('No se encontró información para este cultivo');
-                setInfoCultivos(null); // Asegúrate de manejar correctamente el estado de infoCultivos
+                setInfoCultivos(null); 
               }
             } catch (error) {
               console.error('Error obteniendo la información del cultivo:', error);
@@ -134,10 +128,7 @@ const Miscultivos = () => {
                         await deleteDoc(doc(db, 'cultivos', cultivoId));
                         console.log('Cultivo eliminado correctamente');
                         Alert.alert('Éxito', 'Cultivo eliminado correctamente');
-                        // Actualizar la lista de cultivos eliminando el cultivo que se eliminó
                         setCultivos((prevCultivos) => prevCultivos.filter((cultivo) => cultivo.id !== cultivoId));
-
-                        // Cerrar el modal después de la eliminación
                         setInfoModalVisible(false);
                         obtenerCultivos();
                     } catch (error) {
@@ -166,7 +157,7 @@ const Miscultivos = () => {
             } catch (error) {
                 console.error('Error al obtener el clima:', error);
             } finally {
-                setLoadingClima(false); // Finaliza la carga
+                setLoadingClima(false);
             }
         };
 
@@ -375,9 +366,9 @@ const styles = StyleSheet.create({
     cultivoItem: { 
         flex: 1,
         padding: 15,
-        backgroundColor: '#fff', // Fondo blanco para cada item
+        backgroundColor: '#fff',
         borderRadius: 10,
-        marginBottom: 10, // Espacio entre items
+        marginBottom: 10, 
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 5,
@@ -508,11 +499,11 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 10,
-        color: '#4CAF50', // Verde natural para el título
+        color: '#4CAF50', 
     },
     cultivoTextInfo: {
         fontSize: 16,
-        color: '#388E3C', // Verde oscuro para el texto
+        color: '#388E3C', 
         textAlign: 'center',
         marginVertical: 5,
         fontWeight: '600',
@@ -524,7 +515,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     botonEliminarInfo: {
-        backgroundColor: '#F44336', // Rojo para el botón de eliminar
+        backgroundColor: '#F44336', 
         paddingVertical: 10,
         paddingHorizontal: 15,
         borderRadius: 10,
@@ -532,7 +523,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     botonCerrarInfo: {
-        backgroundColor: '#4CAF50', // Verde para el botón de cerrar
+        backgroundColor: '#4CAF50', 
         paddingVertical: 10,
         paddingHorizontal: 15,
         borderRadius: 10,
@@ -554,7 +545,7 @@ const styles = StyleSheet.create({
     },
     picker: {
         height: 40,
-        color: '#388E3C', // Color de texto verde oscuro para mantener el estilo natural
+        color: '#388E3C', 
     },
     botonSeguimiento: {
         marginTop: 10,

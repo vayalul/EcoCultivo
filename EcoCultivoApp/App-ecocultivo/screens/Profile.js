@@ -111,7 +111,7 @@ const Profile = () => {
             if (userSnap.exists()) {
                 const userData = userSnap.data();
     
-                // Validar que no ingrese el mismo usuario o contraseña
+                
                 if (newUsername === userData.username) {
                     Alert.alert('Error', 'El nombre de usuario ingresado ya es el actual.');
                     return;
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     button: {
-        backgroundColor: '#128C7E',
+        backgroundColor: 'green',
         paddingVertical: 15,
         width: '100%',
         borderRadius: 10,

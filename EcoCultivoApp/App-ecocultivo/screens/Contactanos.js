@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Image, TextInput, TouchableOpacity, Alert, ImageBackground, StyleSheet } from "react-native";
-import emailjs from 'emailjs-com'; // Importar emailjs
+import emailjs from 'emailjs-com'; 
 
 export default function Contactanos({ navigation }) {
     const [nombre, setNombre] = useState('');
@@ -15,7 +15,7 @@ export default function Contactanos({ navigation }) {
         }
 
         try {
-            // Enviar el correo utilizando EmailJS
+
             const templateParams = {
                 from_name: nombre,
                 from_email: email,
@@ -23,15 +23,15 @@ export default function Contactanos({ navigation }) {
                 message: mensaje
             };
 
-            // Reemplaza estos valores con tu información de EmailJS
+        
             const serviceId = 'Servicio_EcoCultivo';
             const templateId = 'template_EcoCultivo';
-            const userId = 'rFRIu60B8fbZskLig'; // Reemplaza con tu User ID
+            const userId = 'rFRIu60B8fbZskLig'; 
             
 
             await emailjs.send(serviceId, templateId, templateParams, userId);
-            Alert.alert('EcoCultivo', 'Su mensaje ha sido enviado con éxito');
-            navigation.navigate('Login'); // Redirige al home o a la pantalla que prefieras
+            Alert.alert('EcoCultivo', 'Su mensaje ha sido enviado con éxito, en breve nos pondremos en contacto con usted');
+            navigation.navigate('Login');
         } catch (error) {
             console.log(error);
             Alert.alert('EcoCultivo', 'No se pudo enviar el correo');
@@ -40,7 +40,7 @@ export default function Contactanos({ navigation }) {
 
     return (
         <ImageBackground 
-            source={require('../assets/Fondo.png')} // Asegúrate de que la ruta sea correcta
+            source={require('../assets/Fondo.png')}
             style={styles.fondo}
             resizeMode="cover">
         <View style={styles.padre}>
@@ -49,7 +49,7 @@ export default function Contactanos({ navigation }) {
                 </View>
 
             <View style={styles.tarjeta}>
-                    <Text style={styles.titulo}>formulario de contacto</Text>
+                    <Text style={styles.titulo}>Formulario de contacto</Text>
                     <View style={styles.cajaTexto}>
                         <TextInput
                             placeholder="Nombre"

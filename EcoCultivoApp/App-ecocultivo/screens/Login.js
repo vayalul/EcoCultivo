@@ -9,46 +9,40 @@ const auth = getAuth(appFirebase)
 
 export default function Login({ navigation }) {
 
-    //creamos la variable de estado
+   
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
-    // implementamos el hook UseEffect para manejar la persistencia de la autenticacion de los usuarios
-    // al iniciar sesion en nuestro sistema
+    
     useEffect(() => {
-        // Limpiamos los campos de texto al cargar la pantalla del Login
+        
         setEmail('');
         setPassword('');
 
         const unsuscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Si el usuario esta logueado, redirigir a la pantalla Home
+                
                 navigation.navigate('Home');
         }
     });
-    // Limpiamos el listener al desmontar el componente
+    
     return () => unsuscribe();
     }, []);
 
     const logueo = async() => {
-
-        // Verificamos si los campos de email o password estan vacios
+        
         if (email === '' ||  password === '') {
             Alert.alert('Por favor, ingrese un correo y una contraseña válidos');
-            return; // Salimos de la funcion si los campos estan vacios
+            return; 
         }
 
         try {
-            // Intentar iniciar sesión
             await signInWithEmailAndPassword(auth, email, password)
-            
-            // Solo muestra la alerta y navega si el login fue exitoso
             Alert.alert('Iniciando Sesión', 'Accediendo...')
             navigation.navigate('Home')
             
         } catch (error) {
             console.log(error);
-            // Si ocurre un error, muestra solo la alerta de error
             Alert.alert('Error', 'El usuario o la contraseña son incorrectos')
         }
     }
@@ -61,7 +55,7 @@ export default function Login({ navigation }) {
     }
 
     const onFooterLinkPress2 = () => {
-        navigation.navigate('Contactanos'); // Cambiamos la ruta para dirigir al formulario de contacto
+        navigation.navigate('Contactanos'); 
     };
 
     const onForgotPasswordPress = () => {

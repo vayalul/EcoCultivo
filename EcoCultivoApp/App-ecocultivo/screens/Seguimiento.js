@@ -15,9 +15,9 @@ const Seguimiento = ({ route }) => {
     const [image, setImage] = useState(""); 
     const [editMode, setEditMode] = useState(false); 
     const [editingId, setEditingId] = useState(null);
-    const userId = auth.currentUser.uid; // User ID del usuario logeado
+    const userId = auth.currentUser.uid; 
 
-    // cargar seguimientos del usuario segun id del cultivo seleccionado
+
     useEffect(() => {
         const fetchSeguimientos = async () => {
             if (route.params?.cultivo) {
@@ -25,7 +25,7 @@ const Seguimiento = ({ route }) => {
                 const q = query(
                     collection(db, "seguimiento"),
                     where("userId", "==", userId),
-                    where("idCultivo", "==", cultivoId) // Filtrar por idCultivo
+                    where("idCultivo", "==", cultivoId)
                 );
                 const querySnapshot = await getDocs(q);
                 const seguimientosData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -36,7 +36,7 @@ const Seguimiento = ({ route }) => {
         fetchSeguimientos();
     }, [route.params?.cultivo]);
 
-    // para seleccionar una imagen de la galería
+    
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -49,12 +49,12 @@ const Seguimiento = ({ route }) => {
         }
     };
 
-    // guardar seguimiento en firestore
+    
     const saveSeguimiento = async () => {
-        const fechaActual = new Date(); // Fecha local
+        const fechaActual = new Date(); 
 
             const seguimientoData = {
-                idCultivo: selectedCultivo?.id || route.params?.cultivo?.id, // Relacionar con el cultivo
+                idCultivo: selectedCultivo?.id || route.params?.cultivo?.id, 
                 nota,
                 image,
                 userId,
@@ -93,12 +93,12 @@ const Seguimiento = ({ route }) => {
         );
     };
 
-    // Eliminar seguimiento
+   
     const deleteSeguimiento = async (id) => {
         try {
             const seguimientoRef = doc(db, "seguimiento", id);
             await deleteDoc(seguimientoRef);
-            setSeguimientos(seguimientos.filter(item => item.id !== id)); // Filtra el seguimiento eliminado
+            setSeguimientos(seguimientos.filter(item => item.id !== id));
             Alert.alert("Seguimiento eliminado con éxito.");
             console.log("Seguimiento eliminado con éxito.");
         } catch (error) {
@@ -107,7 +107,7 @@ const Seguimiento = ({ route }) => {
         }
     };
 
-    // Editar seguimiento
+    
     const editSeguimiento = async () => {
         const updatedData = {
             nota,

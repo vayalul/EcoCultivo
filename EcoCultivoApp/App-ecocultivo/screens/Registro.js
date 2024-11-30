@@ -14,7 +14,6 @@ export default function Registro({ navigation }) {
     const [isChecked, setIsChecked] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     
-    // Estado para manejar los errores
     const [errorNombre, setErrorNombre] = useState('');
     const [errorUsername, setErrorUsername] = useState('');
     const [errorEmail, setErrorEmail] = useState('');
@@ -29,7 +28,6 @@ export default function Registro({ navigation }) {
         setPassword('');
         setConfirmPassword('');
         
-        // Limpiamos los errores al cargar la pantalla de Registro
         setErrorNombre('');
         setErrorUsername('');
         setErrorEmail('');
@@ -67,7 +65,6 @@ export default function Registro({ navigation }) {
         return regex.test(email);
     };
 
-    // Función para manejar el cambio en el campo de nombre
     const handleNombreChange = (text) => {
         setNombre(text);
         if(!text) {
@@ -77,7 +74,7 @@ export default function Registro({ navigation }) {
         }
     };
 
-    // Función para manejar el cambio en el campo de username
+    
     const handleUsernameChange = (text) => {
         setUsername(text);
         if(!text) {
@@ -87,7 +84,7 @@ export default function Registro({ navigation }) {
         }
     };
 
-    // Función para manejar el cambio en el campo de email
+
     const handleEmailChange = (text) => {
         setEmail(text);
         if (validarEmail(text)) {
@@ -99,7 +96,7 @@ export default function Registro({ navigation }) {
         }
     };
 
-    // Función para manejar el cambio en el campo de contraseña
+    
     const handlePasswordChange = (text) => {
         setPassword(text);
         if(!text) {
@@ -111,7 +108,7 @@ export default function Registro({ navigation }) {
         }
     };
 
-    // Función para manejar el cambio en el campo de confirmar contraseña
+    
     const handleConfirmPasswordChange = (text) => {
         setConfirmPassword(text);
         if(!text) {
@@ -123,25 +120,24 @@ export default function Registro({ navigation }) {
         }
     };
 
-    // Funcion para registrar el usuario
+    
     const registroUsuario = async () => {
-        //limpiar errores al intentar registrar
         setErrorNombre('');
         setErrorUsername('');
         setErrorEmail('');
         setErrorPassword('');
         setErrorConfirmPassword('');
 
-        // Verificar si hay errores
+        
         if (errorNombre || errorUsername || errorEmail || errorPassword || errorConfirmPassword) {
             Alert.alert('Por favor, corrige los errores antes de continuar.');
-            return; // Salimos de la función si hay errores
+            return; 
         }
 
-        // Verificar si hay errores
+        
         if (!isChecked) {
             Alert.alert('Si deseas registrarte, debes aceptar los términos y condiciones.');
-            return; // Salimos de la función si no se acepta
+            return; 
         }
 
         try {
@@ -156,7 +152,7 @@ export default function Registro({ navigation }) {
 
             console.log("UID del usuario registrado:", user.uid);
             Alert.alert('Registro Exitoso', 'Bienvenido a EcoCultivo');
-            navigation.navigate('Home'); // Navegamos al login despues de registrarse
+            navigation.navigate('Home'); 
         } catch (error) {
             console.log("Error al registrar el usuario", error);
             Alert.alert('Error al registrase');
@@ -389,19 +385,19 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     modalButton: {
-        flex: 1, // Esto hará que los botones ocupen el mismo ancho
-        marginHorizontal: 20, // Espacio entre botones
+        flex: 1, 
+        marginHorizontal: 20, 
         alignItems: 'center',
         backgroundColor: 'green',
-        borderColor: 'green', // Color del borde
-        borderWidth: 1, // Ancho del borde
+        borderColor: 'green', 
+        borderWidth: 1, 
         paddingVertical: 15,
         borderRadius:40,
         marginTop: 20,
         width: 150,
     },
     modalButtonText: {
-        color: 'white', // Color del texto
+        color: 'white', 
         fontSize: 14,
     },
     errorText: {
