@@ -61,7 +61,7 @@ export default function Login({ navigation }) {
     }
 
     const onFooterLinkPress2 = () => {
-        navigation.navigate('QuienesSomos'); // Cambiamos la ruta para dirigir a QuienesSomos
+        navigation.navigate('Contactanos'); // Cambiamos la ruta para dirigir al formulario de contacto
     };
 
     const onForgotPasswordPress = () => {

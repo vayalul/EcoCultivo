@@ -13,6 +13,8 @@ import QuienesSomos from './screens/QuienesSomos';
 import ResumenCompra from './screens/ResumenCompra';
 import FormularioCompra from './screens/FormularioCompra';
 import Seguimiento from './screens/Seguimiento';
+import Contactanos from './screens/Contactanos';
+
 
 export default function App() {
 
@@ -93,6 +95,15 @@ function MyStack() {
         headerStyle: {
           backgroundColor: '#128C7E'},
           }} />
+      <Stack.Screen name="Contactanos" component={Contactanos}
+        options={{
+          title: 'Contactanos',
+          headerTintColor: 'white',
+          headerShown: false,
+          headerTitleAlign: 'center',
+          headerStyle: {
+            backgroundColor: '#128C7E'},
+            }} />
 
       <Stack.Screen name="Seguimiento" component={Seguimiento} 
        options={{
