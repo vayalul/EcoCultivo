@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ImageBackground, StyleSheet } from "react-native";
+import { View, Text, Image, TextInput, TouchableOpacity, Alert, ImageBackground, StyleSheet } from "react-native";
 import emailjs from 'emailjs-com'; // Importar emailjs
 
 export default function Contactanos({ navigation }) {
@@ -43,12 +43,12 @@ export default function Contactanos({ navigation }) {
             source={require('../assets/Fondo.png')} // Asegúrate de que la ruta sea correcta
             style={styles.fondo}
             resizeMode="cover">
-            <View style={styles.padre}>
+        <View style={styles.padre}>
                 <View>
-                    
+                    <Image source={require('../assets/Logo.png')} style={styles.logo} />
                 </View>
 
-                <View style={styles.tarjeta}>
+            <View style={styles.tarjeta}>
                     <Text style={styles.titulo}>formulario de contacto</Text>
                     <View style={styles.cajaTexto}>
                         <TextInput
@@ -84,20 +84,21 @@ export default function Contactanos({ navigation }) {
                             multiline
                         />
                     </View>
-
+                    <View style={styles.padreBoton}>
                     <TouchableOpacity style={styles.cajaBoton} onPress={handleEnviarCorreo}>
                         <Text style={styles.TextoBoton}>Enviar</Text>
                     </TouchableOpacity>
-                </View>
+                    </View>
 
                 <View style={styles.footerView}>
                     <Text style={styles.footerText}>
                         <Text onPress={() => navigation.navigate('Login')} style={styles.footerLink}>
-                            Volver al inicio
+                            Volver al login
                         </Text>
                     </Text>
                 </View>
             </View>
+        </View>
         </ImageBackground>
     );
 }
@@ -105,6 +106,15 @@ export default function Contactanos({ navigation }) {
 const styles = StyleSheet.create({
     fondo: {
         flex: 1,
+    },
+    logo: {
+        width: 150,
+        height: 150,
+        borderRadius: 80,
+        borderColor: 'white',
+        position: 'absolute',
+        top: -150,
+        left: -70,
     },
     padre: {
         flex: 1,
@@ -146,16 +156,18 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     inputMensaje: {
-        height: 20,  // Hacemos el campo mensaje más grande
+        height: 20, // Ajusta el alto del input de mensaje
         textAlignVertical: 'top',
+    },
+    padreBoton: {
+        alignItems: 'center',
     },
     cajaBoton: {
         backgroundColor: 'green',
-        paddingVertical: 20,
+        paddingVertical: 15,
         borderRadius: 30,
-        marginTop: 20,
-        alignItems: 'center',
-        width: '60%',
+        marginTop: 10,
+        width: 150,
     },
     TextoBoton: {
         textAlign: 'center',
@@ -163,12 +175,13 @@ const styles = StyleSheet.create({
     },
     footerView: {
         marginTop: 20,
+        alignItems: 'center',
     },
     footerText: {
         color: 'white',
-        textDecorationLine: 'underline',
     },
     footerLink: {
-        color: 'white',
+        color: 'black',
+        textDecorationLine: 'underline',
     },
 });
