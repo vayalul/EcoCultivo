@@ -57,7 +57,7 @@ const Seguimiento = ({ route }) => {
                 idCultivo: selectedCultivo?.id || route.params?.cultivo?.id, 
                 nota,
                 image,
-                userId,
+                userId: userId,
                 fecha: Timestamp.fromDate(fechaActual),
             };
 
@@ -73,7 +73,7 @@ const Seguimiento = ({ route }) => {
                 Alert.alert("Error al agregar seguimiento: ", error);
                 console.log("Error al agregar seguimiento: ", error);
             }
-        };
+    };
 
     const confirmDeleteSeguimiento = (id) => {
         Alert.alert(
@@ -82,28 +82,31 @@ const Seguimiento = ({ route }) => {
             [
                 {
                     text: "Cancelar",
-                    style: "cancel"
+                    style: "cancel",
                 },
                 {
                     text: "Eliminar",
                     onPress: () => deleteSeguimiento(id),
-                    style: "destructive"
-                }
+                    style: "destructive",
+                },
             ]
         );
     };
-
-   
+    
     const deleteSeguimiento = async (id) => {
         try {
             const seguimientoRef = doc(db, "seguimiento", id);
             await deleteDoc(seguimientoRef);
-            setSeguimientos(seguimientos.filter(item => item.id !== id));
+    
+            setSeguimientos((prevSeguimientos) => 
+                (prevSeguimientos || []).filter((item) => item.id !== id)
+            );
+    
             Alert.alert("Seguimiento eliminado con éxito.");
             console.log("Seguimiento eliminado con éxito.");
         } catch (error) {
-            Alert.alert("Error al eliminar seguimiento: ", error);
-            console.log("Error al eliminar seguimiento: ", error);
+            Alert.alert("Error al eliminar seguimiento", error.message);
+            console.log("Error al eliminar seguimiento:", error);
         }
     };
 
