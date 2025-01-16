@@ -17,7 +17,7 @@ const getClima = async () => {
         const { latitude, longitude } = location.coords;
 
         // Usamos las coordenadas para obtener el clima desde la API
-        const URL = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`;
+        const URL = 
         const response = await axios.get(URL);
         return response.data;
     } catch (error) {
